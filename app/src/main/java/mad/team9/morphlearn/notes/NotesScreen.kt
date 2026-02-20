@@ -47,20 +47,71 @@ fun NotesScreen(
         listOf(
             Material(
                 id = "demo1",
-                title = "Demo Note: Operating Systems",
+                title = "OS: Processes & Scheduling",
                 generatedNotes = """
 Key Concepts:
 - Process vs Thread
-- Context switching overhead
+- Context switch overhead
 - Scheduling: FCFS, SJF, RR
 
-Example (Round Robin):
-- Time quantum = 4ms
+Round Robin Example:
+- Quantum = 4ms
 - P1 runs 4ms → preempt
 - P2 runs 4ms → preempt
 
-Summary:
-This should show as headings + bullets, and the card should be collapsible.
+Takeaway:
+RR improves responsiveness but increases context switches.
+            """.trimIndent()
+            ),
+            Material(
+                id = "demo2",
+                title = "Networking: TCP vs UDP",
+                generatedNotes = """
+TCP:
+- Connection-oriented (3-way handshake)
+- Reliable (ACKs, retransmission)
+- Ordered delivery
+
+UDP:
+- Connectionless
+- No delivery guarantee
+- Lower latency; good for streaming/games
+
+When to use:
+- TCP: files, web, email
+- UDP: voice/video, real-time updates
+            """.trimIndent()
+            ),
+            Material(
+                id = "demo3",
+                title = "DB: Normalization Cheat Sheet",
+                generatedNotes = """
+1NF:
+- Atomic values, no repeating groups
+
+2NF:
+- 1NF + no partial dependency on composite key
+
+3NF:
+- 2NF + no transitive dependency
+
+Tip:
+Normalize for consistency, denormalize for performance (carefully).
+            """.trimIndent()
+            ),
+            Material(
+                id = "demo4",
+                title = "Data Structures: Big-O Quick Notes",
+                generatedNotes = """
+Common complexities:
+- O(1): array index access
+- O(log n): binary search
+- O(n): scan list
+- O(n log n): efficient sorts
+- O(n^2): nested loops
+
+Rule of thumb:
+If you see nested loops over n → suspect O(n^2).
             """.trimIndent()
             )
         )
