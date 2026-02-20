@@ -11,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import mad.team9.morphlearn.home.HomeScreen
 import mad.team9.morphlearn.login.LoginScreen
+import mad.team9.morphlearn.notes.NotesScreen
 
 
 @Composable
@@ -22,8 +23,11 @@ fun MorphLearnApp (
 
     NavHost(
         navController,
-        startDestination = "login"
+        startDestination = "notes"
     ){
+        composable("notes") {      // ✅ add this destination
+            NotesScreen()
+        }
         composable("login"){
             LoginScreen(
                 onLoginSuccess = {
