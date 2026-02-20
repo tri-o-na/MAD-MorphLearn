@@ -12,6 +12,7 @@ import androidx.navigation.compose.rememberNavController
 import mad.team9.morphlearn.home.HomeScreen
 import mad.team9.morphlearn.login.LoginScreen
 import mad.team9.morphlearn.login.RegisterScreen // Ensure this is imported
+import mad.team9.morphlearn.onboardingQuiz.OnboardingQuizScreen
 
 @Composable
 fun MorphLearnApp(
@@ -33,7 +34,6 @@ fun MorphLearnApp(
                         popUpTo("login") { inclusive = true }
                     }
                 },
-                // FIX: Pass the missing navigation logic here
                 onNavigateToRegister = {
                     navController.navigate("register")
                 },
@@ -45,12 +45,22 @@ fun MorphLearnApp(
             RegisterScreen(
                 onRegisterSuccess = {
                     // Navigate to home after successful registration
-                    navController.navigate("home") {
+                    navController.navigate("onboarding_quiz") {
                         popUpTo("login") { inclusive = true }
                     }
                 },
                 onBackToLogin = {
                     navController.popBackStack()
+                }
+            )
+        }
+        composable(route = "onboarding_quiz") {
+            OnboardingQuizScreen(
+                onQuizComplete = { style ->
+                    // Navigate to home and pass the style as an argument
+                    navController.navigate("home/$style") {
+                        popUpTo("onboarding_quiz") { inclusive = true }
+                    }
                 }
             )
         }

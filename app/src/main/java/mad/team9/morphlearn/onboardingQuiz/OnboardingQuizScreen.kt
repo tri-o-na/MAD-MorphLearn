@@ -17,7 +17,7 @@ import mad.team9.morphlearn.onboardingQuiz.components.QuestionCard
 
 
 @Composable
-fun OnboardingQuizScreen(viewModel: QuizViewModel = viewModel()) {
+fun OnboardingQuizScreen(viewModel: QuizViewModel = viewModel(), onQuizComplete: (String) -> Unit) {
     val currentQuestion = viewModel.questions[viewModel.currentQuestionIndex]
     val progress = (viewModel.currentQuestionIndex + 1).toFloat() / viewModel.questions.size
 
@@ -61,7 +61,7 @@ fun OnboardingQuizScreen(viewModel: QuizViewModel = viewModel()) {
                     println("USER LEARNING STYLE: $result")
                     println("--------------------------------")
 
-//                    HomeScreen(result)
+                    onQuizComplete(result.toString())
                 }
             },
             modifier = Modifier.fillMaxWidth().height(56.dp),
