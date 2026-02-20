@@ -1,123 +1,68 @@
 package mad.team9.morphlearn.login
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 @Composable
 fun LoginScreen(
     onLoginSuccess: (String) -> Unit,
-    modifier: Modifier
-){
+    onNavigateToRegister: () -> Unit, // Callback to switch screens
+    modifier: Modifier = Modifier
+) {
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+        modifier = Modifier.fillMaxSize().padding(16.dp)
     ) {
-        var username by remember { mutableStateOf("") }
-        var password by remember { mutableStateOf("") }
-        var isMatched by remember { mutableStateOf(false) }
-        var attempted by remember { mutableStateOf(false) }
+        Text(text = "Login", style = MaterialTheme.typography.displayLarge)
 
-        Text(
-            text = "Login",
-            style = MaterialTheme.typography.displayLarge,
-            modifier = modifier
-        )
-
-        TextField(
+        OutlinedTextField(
             value = username,
-            onValueChange = {
-                username = it
-                attempted = false
-            },
+            onValueChange = { username = it; errorMessage = null },
             label = { Text("Username") },
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth()
+            modifier = Modifier.padding(8.dp).fillMaxWidth()
         )
 
-        TextField(
+        OutlinedTextField(
             value = password,
-            onValueChange = {
-                password = it
-                attempted = false
-            },
+            onValueChange = { password = it; errorMessage = null },
             label = { Text("Password") },
             visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth()
-                .testTag("passwordField")
+            modifier = Modifier.padding(8.dp).fillMaxWidth()
         )
 
-        if (!isMatched && attempted) {
-            Text(
-                text = "Password not matched",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Red,
-                modifier = Modifier.testTag("errorText")
-            )
+        errorMessage?.let {
+            Text(text = it, color = Color.Red, style = MaterialTheme.typography.bodySmall)
         }
 
         Button(
             onClick = {
-                isMatched = isPasswordMatched(username, password)
-                if (isMatched) {
-                    password = ""
+                // HARDCODED LOGIC
+                if (username == "admin" && password == "123456") {
                     onLoginSuccess(username)
+                } else {
+                    errorMessage = "Invalid hardcoded credentials"
                 }
-
-                attempted = true
             },
-            enabled = isLoginFieldFilled(username, password),
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth()
-                .testTag("loginButton")
+            enabled = username.isNotEmpty() && password.isNotEmpty(),
+            modifier = Modifier.padding(16.dp).fillMaxWidth()
         ) {
             Text("Login")
         }
+
+        // The button that triggers the switch to the Register Screen
+        TextButton(onClick = onNavigateToRegister) {
+            Text("Don't have an account? Register")
+        }
     }
-}
-
-fun isPasswordMatched(username: String, password: String): Boolean {
-    return true
-}
-
-fun isLoginFieldFilled(username: String, password: String): Boolean {
-    return username.isNotEmpty() && password.isNotEmpty()
-}
-
-@Preview(
-    showBackground = true,
-    device = "id:pixel_8",
-    showSystemUi = true
-)
-@Composable
-fun LoginScreenPreview(){
-    LoginScreen(
-        onLoginSuccess = {},
-        modifier = Modifier
-    )
 }

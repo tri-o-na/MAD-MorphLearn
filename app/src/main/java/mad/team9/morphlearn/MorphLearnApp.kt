@@ -11,37 +11,55 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import mad.team9.morphlearn.home.HomeScreen
 import mad.team9.morphlearn.login.LoginScreen
-
+import mad.team9.morphlearn.login.RegisterScreen // Ensure this is imported
 
 @Composable
-fun MorphLearnApp (
-    modifier: Modifier
-){
+fun MorphLearnApp(
+    modifier: Modifier = Modifier
+) {
     val navController = rememberNavController()
     var username by rememberSaveable { mutableStateOf("") }
 
     NavHost(
-        navController,
-        startDestination = "login"
-    ){
-        composable("login"){
+        navController = navController,
+        startDestination = "login",
+        modifier = modifier
+    ) {
+        composable(route = "login") {
             LoginScreen(
-                onLoginSuccess = {
-                    username = it
+                onLoginSuccess = { typedUsername ->
+                    username = typedUsername
                     navController.navigate("home") {
-                        popUpTo("login") {inclusive = true}
+                        popUpTo("login") { inclusive = true }
                     }
+                },
+                // FIX: Pass the missing navigation logic here
+                onNavigateToRegister = {
+                    navController.navigate("register")
                 },
                 modifier = modifier
             )
         }
 
-        composable("home") {
+        composable(route = "register") {
+            RegisterScreen(
+                onRegisterSuccess = {
+                    // Navigate to home after successful registration
+                    navController.navigate("home") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                },
+                onBackToLogin = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(route = "home") {
             HomeScreen(
                 username = username,
                 modifier = modifier
             )
         }
-
     }
 }
