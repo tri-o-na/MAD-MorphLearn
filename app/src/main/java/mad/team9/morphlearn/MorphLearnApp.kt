@@ -11,7 +11,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import mad.team9.morphlearn.home.HomeScreen
 import mad.team9.morphlearn.login.LoginScreen
-
+// Import your ProfileScreen here (adjust the package name if it's different)
+import mad.team9.morphlearn.profile.ProfileScreen
 
 @Composable
 fun MorphLearnApp (
@@ -21,7 +22,7 @@ fun MorphLearnApp (
     var username by rememberSaveable { mutableStateOf("") }
 
     NavHost(
-        navController,
+        navController = navController,
         startDestination = "login"
     ){
         composable("login"){
@@ -29,7 +30,7 @@ fun MorphLearnApp (
                 onLoginSuccess = {
                     username = it
                     navController.navigate("home") {
-                        popUpTo("login") {inclusive = true}
+                        popUpTo("login") { inclusive = true }
                     }
                 },
                 modifier = modifier
@@ -39,9 +40,17 @@ fun MorphLearnApp (
         composable("home") {
             HomeScreen(
                 username = username,
-                modifier = modifier
+                modifier = modifier,
+                // Pass the navigation action to the button click
+                onNavigateToProfile = {
+                    navController.navigate("profile")
+                }
             )
         }
 
+        // 1. Add the new Profile destination
+        composable("profile") {
+            ProfileScreen()
+        }
     }
 }
