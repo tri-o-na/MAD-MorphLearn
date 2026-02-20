@@ -6,9 +6,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavHost
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import mad.team9.morphlearn.ai.AIGeneratedNotes
+import mad.team9.morphlearn.ai.AIUploadPDF
 import mad.team9.morphlearn.home.HomeScreen
 import mad.team9.morphlearn.login.LoginScreen
 
@@ -28,7 +33,7 @@ fun MorphLearnApp (
             LoginScreen(
                 onLoginSuccess = {
                     username = it
-                    navController.navigate("home") {
+                    navController.navigate("upload") {
                         popUpTo("login") {inclusive = true}
                     }
                 },
@@ -43,5 +48,41 @@ fun MorphLearnApp (
             )
         }
 
+        composable("upload") {
+            AIUploadPDF(navController)
+        }
+
+        composable(
+            route = "notes/{text}",
+            arguments = listOf(
+                navArgument("text") {type = NavType.StringType})
+        ) {
+            val text = it.arguments?.getString("text") ?: ""
+            AIGeneratedNotes(text)
+        }
+
+    }
+}
+
+@Composable
+fun AINavGraph(){
+    val navController = rememberNavController()
+
+    NavHost(
+        navController = navController,
+        startDestination = "upload"
+    ) {
+        composable("upload") {
+            AIUploadPDF(navController)
+        }
+
+        composable(
+            route = "notes/{text}",
+            arguments = listOf(
+                navArgument("text") {type = NavType.StringType})
+        ) {
+            val text = it.arguments?.getString("text") ?: ""
+            AIGeneratedNotes(text)
+        }
     }
 }
