@@ -41,7 +41,7 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToRegister = {
                                     currentScreen = "register"
                                 },
-                                modifier = modifier
+//                                modifier = modifier
                             )
                             "register" -> RegisterScreen(
                                 onRegisterSuccess = {

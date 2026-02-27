@@ -58,16 +58,20 @@ fun MorphLearnApp(
             OnboardingQuizScreen(
                 onQuizComplete = { style ->
                     // Navigate to home and pass the style as an argument
-                    navController.navigate("home/$style") {
+                    navController.navigate("home") {
                         popUpTo("onboarding_quiz") { inclusive = true }
                     }
                 }
             )
         }
 
-        composable(route = "home") {
+        composable(route = "home") { backStackEntry ->
+            // Extract the string from the navigation arguments
+//            val style = backStackEntry.arguments?.getString("learningStyle") ?: "Read/Write"
+
             HomeScreen(
                 username = username,
+                learningStyle = "Read/Write", // HARDCODED HERE
                 modifier = modifier
             )
         }
