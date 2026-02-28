@@ -18,6 +18,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -68,21 +69,23 @@ fun AIUploadPDF(navController: NavController){
             }
         }
 
+    LaunchedEffect(Unit) {
+        pickerLauncher.launch(arrayOf("application/pdf"))
+    }
+
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Button(
-                onClick = {pickerLauncher.launch(arrayOf("application/pdf"))}
-            ) {
-                Text("Upload PDF")
-            }
-
-            if (isLoading){
-                Spacer(Modifier.height(16.dp))
+        if (isLoading) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 CircularProgressIndicator()
+                Spacer(Modifier.height(16.dp))
+                Text("Uploading PDF to AI...")
             }
+        }
+        else {
+            Text("")
         }
     }
 }
