@@ -9,6 +9,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import mad.team9.morphlearn.login.FirebaseAuthManager
+
 
 @Composable
 fun RegisterScreen(
@@ -20,7 +22,7 @@ fun RegisterScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
 
-    val coroutineScope = rememberCoroutineScope()
+    val scope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier.fillMaxSize().padding(24.dp),
@@ -31,7 +33,7 @@ fun RegisterScreen(
 
         OutlinedTextField(
             value = email,
-            onValueChange = { email = it },
+            onValueChange = { email = it.trim() },
             label = { Text("Email") },
             modifier = Modifier.fillMaxWidth().padding(8.dp)
         )
@@ -39,7 +41,7 @@ fun RegisterScreen(
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text("Password") },
+            label = { Text("Password (min 6 chars)") },
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth().padding(8.dp)
         )
@@ -62,27 +64,43 @@ fun RegisterScreen(
                     errorMessage = "Email required & password ≥ 6 characters"
                     return@Button
                 }
+
                 isLoading = true
                 errorMessage = null
 
-                coroutineScope.launch {
-                    val result = FirebaseAuthManager.signUp(email.trim(), password)
+                scope.launch {
+                    val result = FirebaseAuthManager.signUp(email, password)
                     isLoading = false
 
-                    result.onSuccess {
-                        onRegisterSuccess()           // usually go to main screen
-                        // Optionally: show toast "Account created!"
-                    }.onFailure { e ->
+                    result.onSuccess { user ->
+                        // Save minimal profile to Firestore
+                        try {
+                            FirebaseAuthManager.createMinimalUserProfile(
+                                uid = user.uid,
+                                email = user.email ?: ""
+                            )
+                            onRegisterSuccess()
+                        } catch (e: Exception) {
+                            // Don't block navigation if Firestore fails
+                            println("Failed to save profile: ${e.message}")
+                            onRegisterSuccess()
+                        }
+                    }
+
+                    result.onFailure { e ->
                         errorMessage = when {
-                            e.message?.contains("EMAIL_EXISTS") == true -> "Email already in use"
-                            e.message?.contains("INVALID_EMAIL") == true -> "Invalid email format"
-                            e.message?.contains("WEAK_PASSWORD") == true -> "Password too weak"
-                            else -> e.message ?: "Registration failed"
+                            e.message?.contains("EMAIL_EXISTS", ignoreCase = true) == true ->
+                                "Email already in use"
+                            e.message?.contains("INVALID_EMAIL", ignoreCase = true) == true ->
+                                "Invalid email format"
+                            e.message?.contains("WEAK_PASSWORD", ignoreCase = true) == true ->
+                                "Password too weak"
+                            else -> e.localizedMessage ?: "Registration failed"
                         }
                     }
                 }
             },
-            enabled = !isLoading && email.isNotEmpty() && password.length >= 6,
+            enabled = !isLoading && email.isNotBlank() && password.length >= 6,
             modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
         ) {
             Text("Register")

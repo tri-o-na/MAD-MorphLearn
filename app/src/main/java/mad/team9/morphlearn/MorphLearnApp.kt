@@ -12,6 +12,7 @@ import com.google.firebase.auth.FirebaseAuth
 import mad.team9.morphlearn.home.HomeScreen
 import mad.team9.morphlearn.login.LoginScreen
 import mad.team9.morphlearn.login.RegisterScreen
+import androidx.compose.ui.R
 
 @Composable
 fun MorphLearnApp(
