@@ -11,10 +11,9 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
 @Composable
-fun LoginScreen(
-    onLoginSuccess: (String) -> Unit,           // e.g. pass UID or email
-    onNavigateToRegister: () -> Unit,
-    modifier: Modifier = Modifier
+fun RegisterScreen(
+    onRegisterSuccess: () -> Unit,
+    onBackToLogin: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -24,32 +23,31 @@ fun LoginScreen(
     val coroutineScope = rememberCoroutineScope()
 
     Column(
-        verticalArrangement = Arrangement.Center,
+        modifier = Modifier.fillMaxSize().padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier.fillMaxSize().padding(16.dp)
+        verticalArrangement = Arrangement.Center
     ) {
-        Text(text = "Login", style = MaterialTheme.typography.displayLarge)
+        Text("Register", style = MaterialTheme.typography.displayLarge)
 
         OutlinedTextField(
             value = email,
-            onValueChange = { email = it; errorMessage = null },
+            onValueChange = { email = it },
             label = { Text("Email") },
-            modifier = Modifier.padding(8.dp).fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().padding(8.dp)
         )
 
         OutlinedTextField(
             value = password,
-            onValueChange = { password = it; errorMessage = null },
+            onValueChange = { password = it },
             label = { Text("Password") },
             visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.padding(8.dp).fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().padding(8.dp)
         )
 
         errorMessage?.let {
             Text(
                 text = it,
                 color = Color.Red,
-                style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(top = 8.dp)
             )
         }
@@ -60,37 +58,38 @@ fun LoginScreen(
 
         Button(
             onClick = {
-                if (email.isBlank() || password.isBlank()) {
-                    errorMessage = "Please fill in all fields"
+                if (email.isBlank() || password.length < 6) {
+                    errorMessage = "Email required & password ≥ 6 characters"
                     return@Button
                 }
                 isLoading = true
                 errorMessage = null
 
                 coroutineScope.launch {
-                    val result = FirebaseAuthManager.signIn(email.trim(), password)
+                    val result = FirebaseAuthManager.signUp(email.trim(), password)
                     isLoading = false
 
-                    result.onSuccess { user ->
-                        onLoginSuccess(user.uid)           // or user.email!!
+                    result.onSuccess {
+                        onRegisterSuccess()           // usually go to main screen
+                        // Optionally: show toast "Account created!"
                     }.onFailure { e ->
                         errorMessage = when {
-                            e.message?.contains("INVALID_LOGIN_CREDENTIALS") == true ||
-                                    e.message?.contains("INVALID_EMAIL") == true -> "Invalid email or password"
-                            e.message?.contains("network") == true -> "Network error. Check connection"
-                            else -> e.message ?: "Login failed"
+                            e.message?.contains("EMAIL_EXISTS") == true -> "Email already in use"
+                            e.message?.contains("INVALID_EMAIL") == true -> "Invalid email format"
+                            e.message?.contains("WEAK_PASSWORD") == true -> "Password too weak"
+                            else -> e.message ?: "Registration failed"
                         }
                     }
                 }
             },
-            enabled = !isLoading && email.isNotEmpty() && password.isNotEmpty(),
-            modifier = Modifier.padding(16.dp).fillMaxWidth()
+            enabled = !isLoading && email.isNotEmpty() && password.length >= 6,
+            modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
         ) {
-            Text("Login")
+            Text("Register")
         }
 
-        TextButton(onClick = onNavigateToRegister) {
-            Text("Don't have an account? Register")
+        TextButton(onClick = onBackToLogin) {
+            Text("Back to Login")
         }
     }
 }

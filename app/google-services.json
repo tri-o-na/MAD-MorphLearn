@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "244960431740",
+    "project_id": "morphlearndb",
+    "storage_bucket": "morphlearndb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:244960431740:android:81ad52cd60ea0ea7b243f9",
+        "android_client_info": {
+          "package_name": "mad.team9.morphlearn"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "244960431740-mpiavf8401a9co8agqcrjlpj7im1l3kq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "mad.team9.morphlearn",
+            "certificate_hash": "eadd636dc2a00a0a2fa54055c4eb26b9590af64b"
+          }
+        },
+        {
+          "client_id": "244960431740-q49jnvrjc3bjq5q0r3tqt0h06359ovsa.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBaoCEUMuRpASjTq_ExKB7Y40xmY_WiKn4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "244960431740-q49jnvrjc3bjq5q0r3tqt0h06359ovsa.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
