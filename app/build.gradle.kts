@@ -9,9 +9,7 @@ plugins {
 
 android {
     namespace = "mad.team9.morphlearn"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "mad.team9.morphlearn"
@@ -67,10 +65,18 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material3.adaptive.navigation.suite)
     implementation(libs.androidx.navigation.compose)
+
+    // Firebase
+    implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.firestore)
     implementation(libs.androidx.compose.runtime)
     implementation(libs.androidx.appcompat)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation(libs.firebase.auth)
+
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -78,8 +84,4 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-    implementation(platform("com.google.firebase:firebase-bom:34.10.0"))
-    implementation("com.google.firebase:firebase-auth")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
 }
