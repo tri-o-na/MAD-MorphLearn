@@ -8,28 +8,32 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: (String) -> Unit,
-    onNavigateToRegister: () -> Unit, // Callback to switch screens
+    onLoginSuccess: (String) -> Unit,           // e.g. pass UID or email
+    onNavigateToRegister: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var username by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
+
+    val coroutineScope = rememberCoroutineScope()
 
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxSize().padding(16.dp)
+        modifier = modifier.fillMaxSize().padding(16.dp)
     ) {
         Text(text = "Login", style = MaterialTheme.typography.displayLarge)
 
         OutlinedTextField(
-            value = username,
-            onValueChange = { username = it; errorMessage = null },
-            label = { Text("Username") },
+            value = email,
+            onValueChange = { email = it; errorMessage = null },
+            label = { Text("Email") },
             modifier = Modifier.padding(8.dp).fillMaxWidth()
         )
 
@@ -42,25 +46,49 @@ fun LoginScreen(
         )
 
         errorMessage?.let {
-            Text(text = it, color = Color.Red, style = MaterialTheme.typography.bodySmall)
+            Text(
+                text = it,
+                color = Color.Red,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        }
+
+        if (isLoading) {
+            CircularProgressIndicator(modifier = Modifier.padding(16.dp))
         }
 
         Button(
             onClick = {
-                // HARDCODED LOGIC
-                if (username == "admin" && password == "123456") {
-                    onLoginSuccess(username)
-                } else {
-                    errorMessage = "Invalid hardcoded credentials"
+                if (email.isBlank() || password.isBlank()) {
+                    errorMessage = "Please fill in all fields"
+                    return@Button
+                }
+                isLoading = true
+                errorMessage = null
+
+                coroutineScope.launch {
+                    val result = FirebaseAuthManager.signIn(email.trim(), password)
+                    isLoading = false
+
+                    result.onSuccess { user ->
+                        onLoginSuccess(user.uid)           // or user.email!!
+                    }.onFailure { e ->
+                        errorMessage = when {
+                            e.message?.contains("INVALID_LOGIN_CREDENTIALS") == true ||
+                                    e.message?.contains("INVALID_EMAIL") == true -> "Invalid email or password"
+                            e.message?.contains("network") == true -> "Network error. Check connection"
+                            else -> e.message ?: "Login failed"
+                        }
+                    }
                 }
             },
-            enabled = username.isNotEmpty() && password.isNotEmpty(),
+            enabled = !isLoading && email.isNotEmpty() && password.isNotEmpty(),
             modifier = Modifier.padding(16.dp).fillMaxWidth()
         ) {
             Text("Login")
         }
 
-        // The button that triggers the switch to the Register Screen
         TextButton(onClick = onNavigateToRegister) {
             Text("Don't have an account? Register")
         }
