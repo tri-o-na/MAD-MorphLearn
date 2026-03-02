@@ -1,5 +1,8 @@
 package mad.team9.morphlearn
 
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -13,12 +16,20 @@ import mad.team9.morphlearn.home.HomeScreen
 import mad.team9.morphlearn.login.LoginScreen
 import mad.team9.morphlearn.login.RegisterScreen
 import androidx.compose.ui.R
+import androidx.navigation.compose.currentBackStackEntryAsState
+import mad.team9.morphlearn.ai.AIFloatingActionButton
 
 @Composable
 fun MorphLearnApp(
     modifier: Modifier = Modifier
 ) {
     val navController = rememberNavController()
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val route = backStackEntry?.destination?.route
+
+    val showAIFAB = route in listOf(
+        "home"
+    )
 
     // Decide start destination based on current auth state
     val startDestination by remember {
@@ -27,46 +38,64 @@ fun MorphLearnApp(
         )
     }
 
-    NavHost(
-        navController = navController,
-        startDestination = startDestination,
-        modifier = modifier
+    AppScaffold(
+        fab= {
+            if (showAIFAB){
+                AIFloatingActionButton(navController)
+            }
+        }
+    ) { paddingValues ->
+        NavHost(
+            navController = navController,
+            startDestination = startDestination,
+            modifier = Modifier.padding(paddingValues)
+        ){
+            composable("login") {
+                LoginScreen(
+                    onLoginSuccess = {
+                        navController.navigate("home") {
+                            popUpTo("login") { inclusive = true }
+                            popUpTo("register") { inclusive = true }
+                        }
+                    },
+                    onNavigateToRegister = { navController.navigate("register") }
+                )
+            }
+
+            composable("register") {
+                RegisterScreen(
+                    onRegisterSuccess = {
+                        navController.navigate("home") {
+                            popUpTo("login") { inclusive = true }
+                            popUpTo("register") { inclusive = true }
+                        }
+                    },
+                    onBackToLogin = { navController.popBackStack() }
+                )
+            }
+
+            composable("home") {
+                val user = FirebaseAuth.getInstance().currentUser
+                val displayName = user?.email?.substringBefore("@") ?: "Learner"
+
+                HomeScreen(
+                    username = displayName,
+                    navController = navController,  // ← add this
+                    modifier = Modifier
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun AppScaffold(
+    fab: (@Composable () -> Unit)? = null,
+    content: @Composable (PaddingValues) -> Unit
+){
+    Scaffold(
+        floatingActionButton = { fab?.invoke()}
     ) {
-        composable("login") {
-            LoginScreen(
-                onLoginSuccess = {
-                    navController.navigate("home") {
-                        popUpTo("login") { inclusive = true }
-                        popUpTo("register") { inclusive = true }
-                    }
-                },
-                onNavigateToRegister = { navController.navigate("register") }
-            )
-        }
-
-        composable("register") {
-            RegisterScreen(
-                onRegisterSuccess = {
-                    navController.navigate("home") {
-                        popUpTo("login") { inclusive = true }
-                        popUpTo("register") { inclusive = true }
-                    }
-                },
-                onBackToLogin = { navController.popBackStack() }
-            )
-        }
-
-        composable("home") {
-            val user = FirebaseAuth.getInstance().currentUser
-            val displayName = user?.email?.substringBefore("@") ?: "Learner"
-
-            HomeScreen(
-                username = displayName,
-                navController = navController,  // ← add this
-                modifier = Modifier
-            )
-        }
-
-
+        padding -> content(padding)
     }
 }
