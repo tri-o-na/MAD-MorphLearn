@@ -11,7 +11,8 @@ import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
 import mad.team9.morphlearn.home.HomeScreen
 import mad.team9.morphlearn.login.LoginScreen
-import mad.team9.morphlearn.login.RegisterScreen
+import mad.team9.morphlearn.login.RegisterScreen // Ensure this is imported
+import mad.team9.morphlearn.onboardingQuiz.OnboardingQuizScreen
 
 @Composable
 fun MorphLearnApp(
@@ -54,6 +55,20 @@ fun MorphLearnApp(
                 onBackToLogin = { navController.popBackStack() }
             )
         }
+        composable(route = "onboarding_quiz") {
+            OnboardingQuizScreen(
+                onQuizComplete = { style ->
+                    // Navigate to home and pass the style as an argument
+                    navController.navigate("home") {
+                        popUpTo("onboarding_quiz") { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(route = "home") { backStackEntry ->
+            // Extract the string from the navigation arguments
+//            val style = backStackEntry.arguments?.getString("learningStyle") ?: "Read/Write"
 
             composable("home") {
                 val user = FirebaseAuth.getInstance().currentUser
