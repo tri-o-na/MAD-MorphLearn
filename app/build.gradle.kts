@@ -5,11 +5,9 @@ plugins {
     alias(libs.plugins.google.gms.google.services)
 }
 
-android {
+configure<com.android.build.api.dsl.ApplicationExtension> {
     namespace = "mad.team9.morphlearn"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "mad.team9.morphlearn"
@@ -34,13 +32,17 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
+
     buildFeatures {
         compose = true
     }
 }
+
+        kotlin {
+            compilerOptions {
+                jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+            }
+        }
 
 dependencies {
     implementation(libs.androidx.core.ktx)

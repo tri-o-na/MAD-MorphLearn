@@ -11,7 +11,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
 import mad.team9.morphlearn.home.HomeScreen
+import mad.team9.morphlearn.login.FirebaseAuthManager
 import mad.team9.morphlearn.onboardingQuiz.components.AnswerOption
 import mad.team9.morphlearn.onboardingQuiz.components.QuestionCard
 
@@ -20,6 +22,7 @@ import mad.team9.morphlearn.onboardingQuiz.components.QuestionCard
 fun OnboardingQuizScreen(viewModel: QuizViewModel = viewModel(), onQuizComplete: (String) -> Unit) {
     val currentQuestion = viewModel.questions[viewModel.currentQuestionIndex]
     val progress = (viewModel.currentQuestionIndex + 1).toFloat() / viewModel.questions.size
+    val coroutineScope = rememberCoroutineScope()
 
     Column(modifier = Modifier.fillMaxSize().padding(20.dp)) {
         LinearProgressIndicator(
@@ -55,13 +58,16 @@ fun OnboardingQuizScreen(viewModel: QuizViewModel = viewModel(), onQuizComplete:
         Button(
             onClick = {
                 viewModel.moveToNext { result ->
-                    // This code runs when 'Finish' is clicked on the last question
-                    println("--------------------------------")
-                    println("QUIZ COMPLETE")
-                    println("USER LEARNING STYLE: $result")
-                    println("--------------------------------")
+                    coroutineScope.launch {
+                        // 1. Save style to Firebase
+                        val saveResult = FirebaseAuthManager.saveLearningStyle(result.toString())
 
-                    onQuizComplete(result.toString())
+                        // 2. Navigate regardless of success (or handle error with a Toast)
+                        if (saveResult.isFailure) {
+                            println("DB Error: ${saveResult.exceptionOrNull()?.message}")
+                        }
+                        onQuizComplete(result.toString())
+                    }
                 }
             },
             modifier = Modifier.fillMaxWidth().height(56.dp),

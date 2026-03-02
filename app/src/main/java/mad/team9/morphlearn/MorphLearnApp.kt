@@ -47,8 +47,7 @@ fun MorphLearnApp(
         composable("register") {
             RegisterScreen(
                 onRegisterSuccess = {
-                    navController.navigate("home") {
-                        popUpTo("login") { inclusive = true }
+                    navController.navigate("onboarding_quiz") { // user is directed to do the onboard quiz as soon as they register
                         popUpTo("register") { inclusive = true }
                     }
                 },
@@ -66,7 +65,7 @@ fun MorphLearnApp(
             )
         }
 
-        composable(route = "home") { backStackEntry ->
+//        composable(route = "home") { backStackEntry ->
             // Extract the string from the navigation arguments
 //            val style = backStackEntry.arguments?.getString("learningStyle") ?: "Read/Write"
 
