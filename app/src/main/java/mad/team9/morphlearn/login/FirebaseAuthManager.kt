@@ -48,15 +48,9 @@ object FirebaseAuthManager {
         val userData = mapOf(
             "email" to email,
             "createdAt" to Timestamp.now()
-            // You can add more fields here in the future, for example:
-            // "displayName" to displayName,
-            // "username" to username,
-            // "avatarUrl" to "",
-            // "role" to "learner",
-            // "points" to 0
         )
 
-        db.collection("users")
+        db.collection("Users")
             .document(uid)
             .set(userData)
             .await()
@@ -66,7 +60,7 @@ object FirebaseAuthManager {
      * Optional: Update last login time (can be called after successful signIn)
      */
     suspend fun updateLastLogin(uid: String) {
-        db.collection("users")
+        db.collection("Users")
             .document(uid)
             .update("lastLogin", Timestamp.now())
             .await()
