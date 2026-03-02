@@ -16,8 +16,12 @@ import mad.team9.morphlearn.home.HomeScreen
 import mad.team9.morphlearn.login.LoginScreen
 import mad.team9.morphlearn.login.RegisterScreen
 import androidx.compose.ui.R
+import androidx.navigation.NavType
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.navArgument
 import mad.team9.morphlearn.ai.AIFloatingActionButton
+import mad.team9.morphlearn.ai.AIGeneratedNotes
+import mad.team9.morphlearn.ai.AIUploadPDF
 
 @Composable
 fun MorphLearnApp(
@@ -83,6 +87,18 @@ fun MorphLearnApp(
                     navController = navController,  // ← add this
                     modifier = Modifier
                 )
+            }
+
+            composable("upload-PDF") {
+                AIUploadPDF(navController)
+            }
+
+            composable(
+                route= "notes/{text}",
+                arguments = listOf(navArgument("text"){ type = NavType.StringType})
+            ) {
+                val notesJson = it.arguments?.getString("text") ?:""
+                AIGeneratedNotes(notesJson,navController)
             }
         }
     }

@@ -12,7 +12,7 @@ fun AIFloatingActionButton(
     navController: NavController
 ) {
     FloatingActionButton(
-        onClick = { navController.navigate("upload")}
+        onClick = { navController.navigate("upload-PDF")}
     ) {
         Icon(
             imageVector = Icons.Default.Add,

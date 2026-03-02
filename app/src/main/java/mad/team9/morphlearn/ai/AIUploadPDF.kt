@@ -106,7 +106,21 @@ suspend fun uploadPDFToAI(
             JSONObject().apply {
                 put("parts", JSONArray().apply {
                     put(JSONObject().apply {
-                        put("text","Generate structured study notes from this PDF.")
+                        put("text","""
+                           Generate study notes from the provided PDF.
+                           Return the result in the following JSON format:
+                            {
+                                "title": "<a title for the study notes>",
+                                "generatedNotes": "<well-structured notes>"
+                            }
+                            
+                           Rules:
+                           1. Do NOT include markdown
+                           2. Do NOT include explanations
+                           3. Do Not wrap the JSON in backticks
+                           4. Return ONLY the JSON object
+                           5. Do NOT add or modify the JSON keys
+                        """)
                     })
 
                     put(JSONObject().apply {
