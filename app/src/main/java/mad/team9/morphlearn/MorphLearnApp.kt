@@ -1,19 +1,12 @@
 package mad.team9.morphlearn
 
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MovableContent
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavHost
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
 import mad.team9.morphlearn.home.HomeScreen
@@ -50,43 +43,6 @@ fun MorphLearnApp(
                 onNavigateToRegister = { navController.navigate("register") }
             )
         }
-    ) { paddingValues ->
-        NavHost(
-            navController,
-            startDestination = "login",
-            modifier = Modifier.padding(paddingValues)
-        ){
-            composable("login"){
-                LoginScreen(
-                    onLoginSuccess = {
-                        username = it
-                        navController.navigate("home") {
-                            popUpTo("login") {inclusive = true}
-                        }
-                    },
-                    modifier = modifier
-                )
-            }
-
-            composable("home") {
-                HomeScreen(
-                    username = username,
-                    modifier = modifier
-                )
-            }
-
-            composable("upload") {
-                AIUploadPDF(navController)
-            }
-
-            composable(
-                route = "notes/{text}",
-                arguments = listOf(
-                    navArgument("text") {type = NavType.StringType})
-            ) {
-                val text = it.arguments?.getString("text") ?: ""
-                AIGeneratedNotes(text)
-            }
 
         composable("register") {
             RegisterScreen(

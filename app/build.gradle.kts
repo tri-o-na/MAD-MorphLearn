@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.konan.properties.Properties
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -21,17 +19,6 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        val localProperties = Properties()
-        val localPropertiesFile = rootProject.file("local.properties")
-
-        if (localPropertiesFile.exists()){
-            localProperties.load(localPropertiesFile.inputStream())
-        }
-
-        val apiKey = localProperties.getProperty("GEMINI_API_KEY")?: throw GradleException("GEMINI_API_KEY not found in local.properties")
-
-        buildConfigField("String","GEMINI_API_KEY","\"$apiKey\"")
     }
 
     buildTypes {
@@ -52,7 +39,6 @@ android {
     }
     buildFeatures {
         compose = true
-        buildConfig = true
     }
 }
 
@@ -69,9 +55,6 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.firebase.firestore)
-    implementation(libs.androidx.compose.runtime)
-    implementation(libs.androidx.appcompat)
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
