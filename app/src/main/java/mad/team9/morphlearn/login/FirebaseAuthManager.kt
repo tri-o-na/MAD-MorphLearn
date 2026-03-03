@@ -4,13 +4,17 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import com.google.firebase.Timestamp
 import kotlinx.coroutines.tasks.await
 
 object FirebaseAuthManager {
+
+    // ───────────────────────────────────────────────
+    // Authentication part
+    // ───────────────────────────────────────────────
+
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val db: FirebaseFirestore get() = FirebaseFirestore.getInstance()
-
-    val currentUser: FirebaseUser? get() = auth.currentUser
 
     suspend fun signIn(email: String, password: String): Result<FirebaseUser> = try {
         val result = auth.signInWithEmailAndPassword(email, password).await()
@@ -42,5 +46,37 @@ object FirebaseAuthManager {
 
     fun signOut() {
         auth.signOut()
+    }
+
+    // ───────────────────────────────────────────────
+    // Firestore profile helpers
+    // ───────────────────────────────────────────────
+
+
+
+    /**
+     * Creates a minimal user profile document in Firestore after signup.
+     * You can easily extend this later by adding more fields.
+     */
+    suspend fun createMinimalUserProfile(uid: String, email: String) {
+        val userData = mapOf(
+            "email" to email,
+            "createdAt" to Timestamp.now()
+        )
+
+        db.collection("Users")
+            .document(uid)
+            .set(userData)
+            .await()
+    }
+
+    /**
+     * Optional: Update last login time (can be called after successful signIn)
+     */
+    suspend fun updateLastLogin(uid: String) {
+        db.collection("Users")
+            .document(uid)
+            .update("lastLogin", Timestamp.now())
+            .await()
     }
 }
