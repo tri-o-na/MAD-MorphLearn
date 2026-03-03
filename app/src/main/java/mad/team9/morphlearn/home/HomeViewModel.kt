@@ -18,10 +18,10 @@ class HomeViewModel : ViewModel() {
     var isDataLoaded = mutableStateOf(false)
 
     fun fetchUserData() {
-        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val userId = FirebaseAuth.getInstance().currentUser?.uid?: return
 
         FirebaseFirestore.getInstance()
-            .collection("users")
+            .collection("Users")
             .document(userId)
             .get()
             .addOnSuccessListener { document ->
