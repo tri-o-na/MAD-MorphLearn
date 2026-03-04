@@ -27,6 +27,8 @@ fun ProfileScreen() {
     var name by remember { mutableStateOf("Loading...") }
     var email by remember { mutableStateOf("...") }
     var learnerType by remember { mutableStateOf("...") }
+    val user = FirebaseAuth.getInstance().currentUser
+    val displayName = user?.email?.substringBefore("@") ?: "Learner"
 
     // Fetch data from Firestore
     LaunchedEffect(Unit) {
@@ -37,9 +39,9 @@ fun ProfileScreen() {
             .get()
             .addOnSuccessListener { document ->
                 if (document != null && document.exists()) {
-                    name = document.getString("displayName") ?: "No Name"
+                    name = displayName
                     email = document.getString("email") ?: "No Email"
-                    learnerType = document.getString("learnerType") ?: "Not Set"
+                    learnerType = document.getString("learningStyle") ?: "Not Set"
                 }
             }
     }
