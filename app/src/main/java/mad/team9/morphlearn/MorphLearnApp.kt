@@ -11,6 +11,8 @@ import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
 import mad.team9.morphlearn.home.HomeScreen
 import mad.team9.morphlearn.login.LoginScreen
+// Import your ProfileScreen here (adjust the package name if it's different)
+import mad.team9.morphlearn.profile.ProfileScreen
 import mad.team9.morphlearn.login.RegisterScreen // Ensure this is imported
 import mad.team9.morphlearn.onboardingQuiz.OnboardingQuizScreen
 

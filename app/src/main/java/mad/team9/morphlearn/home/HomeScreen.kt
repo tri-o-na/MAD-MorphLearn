@@ -1,5 +1,6 @@
 package mad.team9.morphlearn.home
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -13,6 +14,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import mad.team9.morphlearn.login.FirebaseAuthManager  // ← ADD THIS IMPORT
@@ -210,6 +213,16 @@ fun SubjectProgressItem(subject: SubjectProgress) {
             color = Color(0xFF006064),
             trackColor = Color(0xFFE0E0E0)
         )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // 2. The Navigation Button
+        Button(
+            onClick = { onNavigateToProfile() },
+            modifier = Modifier.fillMaxWidth(0.7f)
+        ) {
+            Text(text = "View Profile")
+        }
     }
 }
 
