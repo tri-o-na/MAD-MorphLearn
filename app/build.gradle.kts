@@ -27,8 +27,8 @@ android {
             localProperties.load(localPropertiesFile.inputStream())
         }
 
-        val apiKey = localProperties.getProperty("GEMINI_API_KEY")?: throw GradleException("GEMINI_API_KEY not found in local.properties")
-
+        // Check in localProperties first, then .env for gemini_api_key. If still not found, return ""
+        val apiKey = localProperties.getProperty("GEMINI_API_KEY")?: System.getenv("GEMINI_API_KEY")?:""
         buildConfigField("String","GEMINI_API_KEY","\"$apiKey\"")
     }
 
