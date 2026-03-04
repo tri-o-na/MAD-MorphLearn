@@ -17,7 +17,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MorphLearnTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MorphLearnApp (
+                    MorphLearnApp(
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
