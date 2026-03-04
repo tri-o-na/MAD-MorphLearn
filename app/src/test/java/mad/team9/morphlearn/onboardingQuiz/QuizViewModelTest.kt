@@ -1,6 +1,8 @@
 package mad.team9.morphlearn.onboardingQuiz
 
-//import io.mockk.mockk
+import io.mockk.confirmVerified
+import io.mockk.mockk
+import io.mockk.verify
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -89,5 +91,42 @@ class QuizViewModelTest {
 
         // 2 vs 2 tie should be READ_WRITE per logic: (readWriteCount >= kinestheticCount)
         assertEquals(LearningStyle.READ_WRITE, resultStyle)
+    }
+
+    @Test
+    fun testQuizCompletionCallsCallbackWithCorrectStyle() = runTest {
+        val viewModel = QuizViewModel()
+
+        // 1. Create a mock for the completion callback lambda
+        val onCompleteMock = mockk<(LearningStyle) -> Unit>(relaxed = true)
+
+        // 2. Force a tie scenario (2 Read/Write, 2 Kinesthetic)
+        // Question 1 & 2: Read/Write
+        repeat(2) {
+            val idx = viewModel.questions[viewModel.currentQuestionIndex].options.indexOfFirst {
+                it.style == LearningStyle.READ_WRITE
+            }
+            viewModel.selectOption(idx)
+            viewModel.moveToNext {}
+        }
+
+        // Question 3 & 4: Kinesthetic
+        // On the final question, we pass our mock
+        repeat(2) { i ->
+            val idx = viewModel.questions[viewModel.currentQuestionIndex].options.indexOfFirst {
+                it.style == LearningStyle.KINESTHETIC
+            }
+            viewModel.selectOption(idx)
+
+            if (viewModel.currentQuestionIndex == viewModel.questions.size - 1) {
+                viewModel.moveToNext(onCompleteMock)
+            } else {
+                viewModel.moveToNext {}
+            }
+        }
+
+        // 3. Verify the mock was called with READ_WRITE (due to the >= tie-breaker)
+        verify { onCompleteMock(LearningStyle.READ_WRITE) }
+        confirmVerified(onCompleteMock)
     }
 }
