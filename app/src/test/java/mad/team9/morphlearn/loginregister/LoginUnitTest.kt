@@ -1,4 +1,4 @@
-package mad.team9.morphlearn
+package mad.team9.morphlearn.loginregister
 
 import mad.team9.morphlearn.login.LoginValidator
 import org.junit.Assert.assertFalse
