@@ -31,6 +31,8 @@ import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 
 @Composable
 fun HomeScreen(
@@ -38,7 +40,11 @@ fun HomeScreen(
 //    learningStyle: String = "Read/Write",
     navController: NavController? = null,
     modifier: Modifier = Modifier,
-    viewModel: HomeViewModel = viewModel()
+    viewModel: HomeViewModel = viewModel(),
+    bottomNavItems: List<String> = listOf("Library", "Home", "Profile"),
+    onBottomNavItemSelected: (String) -> Unit = { route ->
+        if (route == "Profile") navController?.navigate("profile")
+    }
 ) {
     // Trigger Firestore logic
     LaunchedEffect(Unit) {
@@ -54,14 +60,28 @@ fun HomeScreen(
     )
 
     Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { /* Handle Upload Action */ },
-                containerColor = Color(0xFF006064),
-                contentColor = Color.White,
-                shape = CircleShape
+        bottomBar = {
+            BottomAppBar(
+                containerColor = Color.White,
+                tonalElevation = 8.dp
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add")
+                NavigationBar(containerColor = Color.White) {
+                    bottomNavItems.forEach { item ->
+                        NavigationBarItem(
+                            icon = {
+                                // Add logic to select icon based on 'item' (e.g., Library, Home, Profile)
+                                // icons and content descriptions from image_1.png should be used here.
+                            },
+                            label = { Text(text = item) },
+                            selected = false, // Add logic to determine if selected (e.g., current route)
+                            onClick = {
+                                // Add logic to handle navigation to 'item' route or profile action
+                                // The specific action for "Profile" (onNavigateToProfile()) should go here.
+                                // onBottomNavItemSelected(item) is a placeholder for this logic.
+                            }
+                        )
+                    }
+                }
             }
         }
     ) { paddingValues ->
@@ -110,7 +130,11 @@ fun HomeScreen(
                 ) {
                     Column(Modifier.padding(16.dp)) {
                         subjects.forEachIndexed { index, subject ->
-                            SubjectProgressItem(subject)
+                            SubjectProgressItem(
+                                subject = subject,
+                                // PASS THE CALLBACK TO HANDLE NAVIGATION
+                                onViewProfile = { onBottomNavItemSelected("Profile") } // ADD THIS LINE
+                            )
                             if (index < subjects.lastIndex) Spacer(Modifier.height(16.dp))
                         }
                     }
@@ -194,7 +218,9 @@ fun StreakCard(subject: SubjectProgress) {
 }
 
 @Composable
-fun SubjectProgressItem(subject: SubjectProgress) {
+fun SubjectProgressItem(
+        subject: SubjectProgress,
+        onViewProfile: () -> Unit) {
     Column {
         Text(subject.subject, fontWeight = FontWeight.Bold, fontSize = 14.sp)
         Text(
@@ -217,11 +243,13 @@ fun SubjectProgressItem(subject: SubjectProgress) {
         Spacer(modifier = Modifier.height(32.dp))
 
         // 2. The Navigation Button
-        Button(
-            onClick = { onNavigateToProfile() },
-            modifier = Modifier.fillMaxWidth(0.7f)
+        TextButton(
+            onClick = { onViewProfile() },
+            modifier = Modifier.fillMaxWidth(0.7f),
+            shape = RoundedCornerShape(8.dp),
+            border = BorderStroke(1.dp, Color(0xFF006064))
         ) {
-            Text(text = "View Profile")
+            Text(text = "View Profile", color = Color(0xFF006064))
         }
     }
 }

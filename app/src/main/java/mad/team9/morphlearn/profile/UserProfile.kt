@@ -15,7 +15,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
+import mad.team9.morphlearn.login.FirebaseAuthManager
 
 @Composable
 fun ProfileScreen() {
@@ -24,17 +27,21 @@ fun ProfileScreen() {
     var name by remember { mutableStateOf("Loading...") }
     var email by remember { mutableStateOf("...") }
     var learnerType by remember { mutableStateOf("...") }
+    val user = FirebaseAuth.getInstance().currentUser
+    val displayName = user?.email?.substringBefore("@") ?: "Learner"
 
     // Fetch data from Firestore
     LaunchedEffect(Unit) {
         // Using the exact collection name "Users" we found earlier
-        db.collection("Users").document("Z98vdPxtc8CKmjyRhjw8") // Use your actual Doc ID here
+        val userId = FirebaseAuth.getInstance().currentUser?.uid?: return@LaunchedEffect
+        FirebaseFirestore.getInstance()
+            .collection("Users").document(userId) // Use your actual Doc ID here
             .get()
             .addOnSuccessListener { document ->
                 if (document != null && document.exists()) {
-                    name = document.getString("displayName") ?: "No Name"
+                    name = displayName
                     email = document.getString("email") ?: "No Email"
-                    learnerType = document.getString("learnerType") ?: "Not Set"
+                    learnerType = document.getString("learningStyle") ?: "Not Set"
                 }
             }
     }

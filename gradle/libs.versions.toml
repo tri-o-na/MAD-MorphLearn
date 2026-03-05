@@ -13,8 +13,12 @@ navigationCompose = "2.9.7"
 googleGmsGoogleServices = "4.4.4"
 firebaseFirestore = "26.1.0"
 firebaseBom = "34.10.0"
+mockk = "1.13.12"
+coroutinesTest = "1.10.2"
 
 [libraries]
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutinesTest" }
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "materialIconsExtendedAndroid" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
