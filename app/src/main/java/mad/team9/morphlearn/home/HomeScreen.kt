@@ -1,24 +1,17 @@
 package mad.team9.morphlearn.home
 
-import android.util.Log
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import mad.team9.morphlearn.login.FirebaseAuthManager  // ← ADD THIS IMPORT
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -27,24 +20,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.material.icons.filled.MenuBook
-import androidx.compose.material.icons.filled.ShowChart
-import androidx.compose.material.icons.filled.EmojiEvents
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
+import androidx.navigation.NavController
+import mad.team9.morphlearn.login.FirebaseAuthManager
 
 @Composable
 fun HomeScreen(
     username: String,
-//    learningStyle: String = "Read/Write",
     navController: NavController? = null,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = viewModel(),
+    // These parameters are still here to maintain compatibility with your NavHost call,
+    // but the UI logic for the bottom bar has been moved to MorphLearnApp.kt
     bottomNavItems: List<String> = listOf("Library", "Home", "Profile"),
-    onBottomNavItemSelected: (String) -> Unit = { route ->
-        if (route == "Profile") navController?.navigate("profile")
-    }
+    onBottomNavItemSelected: (String) -> Unit = {}
 ) {
     // Trigger Firestore logic
     LaunchedEffect(Unit) {
@@ -53,97 +41,70 @@ fun HomeScreen(
 
     val style = viewModel.learningStyle
 
-    // Mock Data (Move to ViewModel eventually)
+    // Mock Data
     val subjects = listOf(
         SubjectProgress("Computer Science", 1, 1, 85, 3, 3),
         SubjectProgress("Mathematics", 0, 1, 92, 2, 2)
     )
 
-    Scaffold(
-        bottomBar = {
-            BottomAppBar(
-                containerColor = Color.White,
-                tonalElevation = 8.dp
+    // IMPORTANT: No Scaffold here. We use a Box or Column because MorphLearnApp handles the Scaffold.
+    // The modifier here already contains the 'innerPadding' from MorphLearnApp's NavHost.
+    LazyColumn(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color(0xFFF8F9FA))
+    ) {
+        // 1. Teal Header
+        item {
+            HeaderSection(
+                username = username,
+                style = style,
+                onLogout = {
+                    FirebaseAuthManager.signOut()
+                    navController?.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // 2. Stats Cards (Floating over the header)
+        item {
+            StatsGrid()
+        }
+
+        // 3. Daily Streaks Section
+        item {
+            SectionTitle("Daily Streaks 🔥")
+        }
+        items(subjects.filter { it.currentStreak >= 2 }) { subject ->
+            StreakCard(subject)
+        }
+
+        // 4. Subject Progress Section
+        item {
+            SectionTitle("Subject Progress")
+        }
+        item {
+            Card(
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(2.dp)
             ) {
-                NavigationBar(containerColor = Color.White) {
-                    bottomNavItems.forEach { item ->
-                        NavigationBarItem(
-                            icon = {
-                                // Add logic to select icon based on 'item' (e.g., Library, Home, Profile)
-                                // icons and content descriptions from image_1.png should be used here.
-                            },
-                            label = { Text(text = item) },
-                            selected = false, // Add logic to determine if selected (e.g., current route)
-                            onClick = {
-                                // Add logic to handle navigation to 'item' route or profile action
-                                // The specific action for "Profile" (onNavigateToProfile()) should go here.
-                                // onBottomNavItemSelected(item) is a placeholder for this logic.
-                            }
+                Column(Modifier.padding(16.dp)) {
+                    subjects.forEachIndexed { index, subject ->
+                        SubjectProgressItem(
+                            subject = subject,
+                            onViewProfile = { onBottomNavItemSelected("Profile") }
                         )
+                        if (index < subjects.lastIndex) Spacer(Modifier.height(16.dp))
                     }
                 }
             }
         }
-    ) { paddingValues ->
-        LazyColumn(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .background(Color(0xFFF8F9FA))
-        ) {
-            // 1. Teal Header with Welcome Message, Style Badge, and Logout
-            item {
-                HeaderSection(
-                    username = username,
-                    style = style,
-                    onLogout = {
-                        FirebaseAuthManager.signOut()
-                        navController?.navigate("login") {
-                            popUpTo(0) { inclusive = true } // Clears the whole backstack
-                        }
-                    }
-                )
-            }
 
-            // 2. Stats Cards
-            item {
-                StatsGrid()
-            }
-
-            // 3. Daily Streaks Section
-            item {
-                SectionTitle("Daily Streaks 🔥")
-            }
-            items(subjects.filter { it.currentStreak >= 2 }) { subject ->
-                StreakCard(subject)
-            }
-
-            // 4. Subject Progress Section
-            item {
-                SectionTitle("Subject Progress")
-            }
-            item {
-                Card(
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(2.dp)
-                ) {
-                    Column(Modifier.padding(16.dp)) {
-                        subjects.forEachIndexed { index, subject ->
-                            SubjectProgressItem(
-                                subject = subject,
-                                // PASS THE CALLBACK TO HANDLE NAVIGATION
-                                onViewProfile = { onBottomNavItemSelected("Profile") } // ADD THIS LINE
-                            )
-                            if (index < subjects.lastIndex) Spacer(Modifier.height(16.dp))
-                        }
-                    }
-                }
-            }
-
-            // Bottom Spacing
-            item { Spacer(Modifier.height(80.dp)) }
-        }
+        // Extra spacing at the bottom to ensure nothing is cut off
+        item { Spacer(Modifier.height(24.dp)) }
     }
 }
 
@@ -219,8 +180,9 @@ fun StreakCard(subject: SubjectProgress) {
 
 @Composable
 fun SubjectProgressItem(
-        subject: SubjectProgress,
-        onViewProfile: () -> Unit) {
+    subject: SubjectProgress,
+    onViewProfile: () -> Unit
+) {
     Column {
         Text(subject.subject, fontWeight = FontWeight.Bold, fontSize = 14.sp)
         Text(
@@ -230,7 +192,6 @@ fun SubjectProgressItem(
         )
         Spacer(Modifier.height(8.dp))
         LinearProgressIndicator(
-            // Calculation for the progress bar (0.0 to 1.0)
             progress = { subject.completedTopics.toFloat() / subject.totalTopics.toFloat() },
             modifier = Modifier
                 .fillMaxWidth()
@@ -240,20 +201,18 @@ fun SubjectProgressItem(
             trackColor = Color(0xFFE0E0E0)
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // 2. The Navigation Button
         TextButton(
             onClick = { onViewProfile() },
-            modifier = Modifier.fillMaxWidth(0.7f),
+            modifier = Modifier.fillMaxWidth(0.5f),
             shape = RoundedCornerShape(8.dp),
             border = BorderStroke(1.dp, Color(0xFF006064))
         ) {
-            Text(text = "View Profile", color = Color(0xFF006064))
+            Text(text = "View Details", color = Color(0xFF006064), fontSize = 12.sp)
         }
     }
 }
-
 
 @Composable
 fun HeaderSection(username: String, style: String, onLogout: () -> Unit) {
@@ -273,7 +232,6 @@ fun HeaderSection(username: String, style: String, onLogout: () -> Unit) {
                     Text("Welcome, $username!", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
                     Text("We morph your learn 🚀", color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp)
                 }
-                // LOGOUT BUTTON
                 IconButton(onClick = onLogout) {
                     Icon(Icons.Default.ExitToApp, contentDescription = "Logout", tint = Color.White)
                 }
