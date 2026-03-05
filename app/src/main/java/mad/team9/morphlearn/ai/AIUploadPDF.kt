@@ -112,6 +112,13 @@ suspend fun uploadPDFToAI(
                             {
                                 "title": "<a title for the study notes>",
                                 "generatedNotes": "<well-structured notes>"
+                                "questions": [
+                                    {
+                                        "question": "<question text>",
+                                        "options": ["option1", "option2", "option3", "option4"],
+                                        "correctIndex": <number>
+                                    }
+                                ]
                             }
                             
                            Rules:
@@ -120,6 +127,8 @@ suspend fun uploadPDFToAI(
                            3. Do Not wrap the JSON in backticks
                            4. Return ONLY the JSON object
                            5. Do NOT add or modify the JSON keys
+                           6. Ensure options array always has 4 items
+                           7. Ensure correctIndex must match one option index
                         """)
                     })
 

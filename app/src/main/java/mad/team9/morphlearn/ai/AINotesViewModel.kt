@@ -28,12 +28,12 @@ class AINotesViewModel(private val repository: AINotesRepository): ViewModel() {
 
                 val note = repository.parseJson(json)
 
-                repository.saveNote(userId,note)
+                repository.saveNoteAndQuiz(userId,note)
 
                 _state.value = AINoteState.Success
 
             } catch (e: Exception){
-                _state.value = AINoteState.Error(e.message ?:"Unknown error")
+                _state.value = AINoteState.Error(e.message ?:"Invalid AI Response")
             }
         }
     }
