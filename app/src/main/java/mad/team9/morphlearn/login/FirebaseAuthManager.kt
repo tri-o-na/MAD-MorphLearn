@@ -31,7 +31,7 @@ object FirebaseAuthManager {
     }
 
     suspend fun saveLearningStyle(style: String): Result<Unit> = try {
-        val userId = auth.currentUser?.uid ?: throw Exception("User not authenticated")
+        val userId = auth.currentUser?.uid?: throw Exception("User not authenticated")
 
         // Use SetOptions.merge() to avoid overwriting existing fields (like email)
         db.collection("Users")
@@ -42,6 +42,17 @@ object FirebaseAuthManager {
         Result.success(Unit)
     } catch (e: Exception) {
         Result.failure(e)
+    }
+
+    suspend fun isLearningStyleSet(): Boolean {
+        val uid = auth.currentUser?.uid ?: return false
+        return try {
+            val document = db.collection("Users").document(uid).get().await()
+            // Check if the field exists and is not empty
+            document.contains("learningStyle") && document.getString("learningStyle")?.isNotEmpty() == true
+        } catch (e: Exception) {
+            false
+        }
     }
 
     fun signOut() {

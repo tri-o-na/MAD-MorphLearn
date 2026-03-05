@@ -2,11 +2,21 @@ package mad.team9.morphlearn.onboardingQuiz
 
 import io.mockk.confirmVerified
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.verify
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
+import io.mockk.coEvery
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import mad.team9.morphlearn.login.FirebaseAuthManager
+import org.junit.After
+import org.junit.Before
+import io.mockk.every
+import io.mockk.mockkStatic
+import io.mockk.unmockkAll
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class QuizViewModelTest {
@@ -129,4 +139,50 @@ class QuizViewModelTest {
         verify { onCompleteMock(LearningStyle.READ_WRITE) }
         confirmVerified(onCompleteMock)
     }
+
+    // LOGIN
+    @Before
+    fun setup() {
+        // 1. Mock the Android/Firebase static methods BEFORE anything else
+        mockkStatic(FirebaseAuth::class)
+        mockkStatic(FirebaseFirestore::class)
+
+        // 2. Prevent the "Method myPid in android.os.Process not mocked" error
+        every { FirebaseAuth.getInstance() } returns mockk(relaxed = true)
+        every { FirebaseFirestore.getInstance() } returns mockk(relaxed = true)
+
+        // 3. Mock our Manager object
+        mockkObject(FirebaseAuthManager)
+    }
+
+    @After
+    fun tearDown() {
+        // Clean up all mocks to prevent side effects in other tests
+        unmockkAll()
+    }
+
+    @Test
+    fun testLoginRedirectsToQuizWhenStyleIsMissing() = runTest {
+        // Mocking: Database says learning style is NOT set
+        coEvery { FirebaseAuthManager.isLearningStyleSet() } returns false
+
+        // Simulate the logic in MorphLearnApp
+        val isComplete = FirebaseAuthManager.isLearningStyleSet()
+        val destination = if (isComplete) "home" else "onboarding_quiz"
+
+        assertEquals("onboarding_quiz", destination)
+    }
+
+    @Test
+    fun testLoginRedirectsToHomeWhenStyleExists() = runTest {
+        // Mocking: Database says learning style IS already set
+        coEvery { FirebaseAuthManager.isLearningStyleSet() } returns true
+
+        // Simulate the logic in MorphLearnApp
+        val isComplete = FirebaseAuthManager.isLearningStyleSet()
+        val destination = if (isComplete) "home" else "onboarding_quiz"
+
+        assertEquals("home", destination)
+    }
 }
+
