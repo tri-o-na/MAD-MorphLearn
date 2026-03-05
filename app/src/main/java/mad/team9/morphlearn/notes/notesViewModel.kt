@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class NotesViewModel(
-    private val repo: MaterialsRepository = MaterialsRepository()
+    private val repo: MaterialsDataSource = MaterialsRepository()
 ) : ViewModel() {
 
     private val _materials = MutableStateFlow<List<Material>>(emptyList())

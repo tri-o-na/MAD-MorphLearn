@@ -7,15 +7,12 @@ import kotlinx.coroutines.tasks.await
 class MaterialsRepository(
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance(),
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
-) {
-    //private fun uid(): String =
-        //auth.currentUser?.uid ?: throw IllegalStateException("User not logged in")
-    private fun uid(): String {
-        val debugUid = "Z98vdPxtc8CKmjyRhjw8" // your users doc id
-        return auth.currentUser?.uid ?: debugUid
-    }
+) : MaterialsDataSource{
+    private fun uid(): String =
+        auth.currentUser?.uid ?: throw IllegalStateException("User not logged in")
 
-    suspend fun getAllMaterials(): List<Material> {
+
+    override suspend fun getAllMaterials(): List<Material> {
         val snapshot = db.collection("Users")
             .document(uid())
             .collection("Materials")
@@ -32,7 +29,7 @@ class MaterialsRepository(
     }
 
     suspend fun getMaterial(materialId: String): Material? {
-        val doc = db.collection("users")
+        val doc = db.collection("Users")
             .document(uid())
             .collection("Materials")
             .document(materialId)

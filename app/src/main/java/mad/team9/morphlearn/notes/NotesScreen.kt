@@ -41,7 +41,7 @@ fun NotesScreen(
 ) {
     val materials by viewModel.materials.collectAsState()
     val error by viewModel.error.collectAsState()
-    val testMode = true
+    val testMode = false
 
     val displayMaterials = if (testMode) {
         listOf(

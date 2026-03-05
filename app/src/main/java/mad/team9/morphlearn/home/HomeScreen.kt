@@ -1,81 +1,58 @@
 package mad.team9.morphlearn.home
 
-import android.content.ContentValues.TAG
-import android.util.Log
-import android.widget.TextView
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.R
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
+import androidx.navigation.NavController
+import mad.team9.morphlearn.login.FirebaseAuthManager  // ← ADD THIS IMPORT
 
 @Composable
 fun HomeScreen(
     username: String,
-    modifier: Modifier
-){
-    val db = Firebase.firestore
-
-    // This block runs once when the Composable enters the Composition
-    LaunchedEffect(Unit) {
-        db.collection("Users")
-            .get()
-            .addOnSuccessListener { result ->
-                if (result.isEmpty) {
-                    Log.d("FirestoreTest", "Connection successful, but collection is EMPTY.")
-                } else {
-                    for (document in result) {
-                        Log.d(
-                            "FirestoreTest",
-                            "Success! ID: ${document.id} => Data: ${document.data}"
-                        )
-                    }
-                }
-            }
-            .addOnFailureListener { exception ->
-                Log.e("FirestoreTest", "Connection failed!", exception)
-            }
-    }
-
+    navController: NavController? = null,  // ← make it optional for now
+    modifier: Modifier = Modifier
+) {
     Column(
-        verticalArrangement = Arrangement.Center,
+        modifier = modifier.fillMaxSize().padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+        verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "Welcome \n$username!",
-            style = MaterialTheme.typography.displayLarge,
-            textAlign = TextAlign.Center,
-            modifier = modifier
+            text = "Welcome, $username!",
+            style = MaterialTheme.typography.headlineLarge
         )
-
+        Spacer(Modifier.height(16.dp))
         Text(
-            text = "We morph your learn",
-            style = MaterialTheme.typography.displaySmall,
-            textAlign = TextAlign.Center,
-            modifier = modifier
+            text = "We morph your learn 🚀",
+            style = MaterialTheme.typography.titleMedium
         )
+        Spacer(Modifier.height(64.dp))
+
+        // Placeholder for future content
+        Text("Your personalized learning journey starts here...", style = MaterialTheme.typography.bodyLarge)
+        Spacer(Modifier.height(48.dp))
+
+        // Logout button
+        Button(onClick = {
+            FirebaseAuthManager.signOut()
+            navController?.navigate("login") {
+                popUpTo("home") { inclusive = true }
+                // Optional: popUpTo("register") { inclusive = true }
+            }
+        }) {
+            Text("Logout")
+        }
+        Button(onClick = {
+
+            navController?.navigate("notes") {
+                popUpTo("home") { inclusive = true }
+                // Optional: popUpTo("register") { inclusive = true }
+            }
+        }) {
+            Text("notes")
+        }
     }
-}
-@Preview(
-    showBackground = true,
-    device = "id:pixel_8",
-    showSystemUi = true
-)
-@Composable
-fun HomeScreenPreview(){
-    HomeScreen(username = "User", modifier = Modifier)
 }

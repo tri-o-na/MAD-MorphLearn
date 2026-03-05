@@ -3,49 +3,74 @@ package mad.team9.morphlearn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.auth.FirebaseAuth
 import mad.team9.morphlearn.home.HomeScreen
 import mad.team9.morphlearn.login.LoginScreen
+import mad.team9.morphlearn.login.RegisterScreen
 import mad.team9.morphlearn.notes.NotesScreen
-
+import androidx.compose.ui.R
 
 @Composable
-fun MorphLearnApp (
-    modifier: Modifier
-){
+fun MorphLearnApp(
+    modifier: Modifier = Modifier
+) {
     val navController = rememberNavController()
-    var username by rememberSaveable { mutableStateOf("") }
+
+    // Decide start destination based on current auth state
+    val startDestination by remember {
+        mutableStateOf(
+            if (FirebaseAuth.getInstance().currentUser != null) "home" else "login"
+        )
+    }
 
     NavHost(
-        navController,
-        startDestination = "notes"
-    ){
-        composable("notes") {      // ✅ add this destination
-            NotesScreen()
-        }
-        composable("login"){
+        navController = navController,
+        startDestination = startDestination,
+        modifier = modifier
+    ) {
+        composable("login") {
             LoginScreen(
                 onLoginSuccess = {
-                    username = it
                     navController.navigate("home") {
-                        popUpTo("login") {inclusive = true}
+                        popUpTo("login") { inclusive = true }
+                        popUpTo("register") { inclusive = true }
                     }
                 },
-                modifier = modifier
+                onNavigateToRegister = { navController.navigate("register") }
+            )
+        }
+
+        composable("register") {
+            RegisterScreen(
+                onRegisterSuccess = {
+                    navController.navigate("home") {
+                        popUpTo("login") { inclusive = true }
+                        popUpTo("register") { inclusive = true }
+                    }
+                },
+                onBackToLogin = { navController.popBackStack() }
             )
         }
 
         composable("home") {
+            val user = FirebaseAuth.getInstance().currentUser
+            val displayName = user?.email?.substringBefore("@") ?: "Learner"
+
             HomeScreen(
-                username = username,
-                modifier = modifier
+                username = displayName,
+                navController = navController,  // ← add this
+                modifier = Modifier
             )
         }
+        composable("notes") {
+            NotesScreen()
+        }
+
 
     }
 }
