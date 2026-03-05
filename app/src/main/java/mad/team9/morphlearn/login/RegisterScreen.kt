@@ -41,7 +41,7 @@ fun RegisterScreen(
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text("Password (min 6 chars)") },
+            label = { Text("Password (min 8 chars)") },
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth().padding(8.dp)
         )
@@ -60,8 +60,8 @@ fun RegisterScreen(
 
         Button(
             onClick = {
-                if (email.isBlank() || password.length < 6) {
-                    errorMessage = "Email required & password ≥ 6 characters"
+                if (email.isBlank() || password.length < 8) {
+                    errorMessage = "Email required & password ≥ 8 characters"
                     return@Button
                 }
 
