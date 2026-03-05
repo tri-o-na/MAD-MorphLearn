@@ -1,6 +1,5 @@
-package mad.team9.morphlearn.profile // <--- ADD THIS LINE
+package mad.team9.morphlearn.profile
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -10,40 +9,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.firestore
-import mad.team9.morphlearn.login.FirebaseAuthManager
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
-fun ProfileScreen() {
-    val db = Firebase.firestore
-    // State to hold user data
-    var name by remember { mutableStateOf("Loading...") }
-    var email by remember { mutableStateOf("...") }
-    var learnerType by remember { mutableStateOf("...") }
-    val user = FirebaseAuth.getInstance().currentUser
-    val displayName = user?.email?.substringBefore("@") ?: "Learner"
-
-    // Fetch data from Firestore
+fun ProfileScreen(viewModel: ProfileViewModel = viewModel()) {
+    // Fetch data from Firestore when screen loads
     LaunchedEffect(Unit) {
-        // Using the exact collection name "Users" we found earlier
-        val userId = FirebaseAuth.getInstance().currentUser?.uid?: return@LaunchedEffect
-        FirebaseFirestore.getInstance()
-            .collection("Users").document(userId) // Use your actual Doc ID here
-            .get()
-            .addOnSuccessListener { document ->
-                if (document != null && document.exists()) {
-                    name = displayName
-                    email = document.getString("email") ?: "No Email"
-                    learnerType = document.getString("learningStyle") ?: "Not Set"
-                }
-            }
+        viewModel.fetchUserData()
     }
 
     Column(
@@ -80,11 +54,11 @@ fun ProfileScreen() {
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                ProfileDetailItem(label = "Name", value = name)
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
-                ProfileDetailItem(label = "Email", value = email)
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
-                ProfileDetailItem(label = "Learner Type", value = learnerType)
+                ProfileDetailItem(label = "Name", value = viewModel.name)
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                ProfileDetailItem(label = "Email", value = viewModel.email)
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                ProfileDetailItem(label = "Learner Type", value = viewModel.learnerType)
             }
         }
     }
