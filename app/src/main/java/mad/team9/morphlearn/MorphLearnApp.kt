@@ -15,6 +15,9 @@ import com.google.firebase.auth.FirebaseAuth
 import mad.team9.morphlearn.home.HomeScreen
 import mad.team9.morphlearn.login.LoginScreen
 import mad.team9.morphlearn.login.RegisterScreen
+import mad.team9.morphlearn.notes.NotesScreen
+import mad.team9.morphlearn.notes.NoteDetailsScreen
+import mad.team9.morphlearn.stylebasedquiz.QuizPlayScreen
 import androidx.compose.ui.R
 import androidx.navigation.NavType
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -22,6 +25,7 @@ import androidx.navigation.navArgument
 import mad.team9.morphlearn.ai.AIFloatingActionButton
 import mad.team9.morphlearn.ai.AIGeneratedNotes
 import mad.team9.morphlearn.ai.AIUploadPDF
+import java.net.URLEncoder
 
 @Composable
 fun MorphLearnApp(
@@ -86,6 +90,44 @@ fun MorphLearnApp(
                     username = displayName,
                     navController = navController,  // ← add this
                     modifier = Modifier
+                )
+            }
+            composable("notes") {
+                NotesScreen(
+                    onOpenTopic = { materialId ->
+                        navController.navigate("noteDetails/$materialId")
+                    }
+                )
+            }
+            composable(
+                route = "noteDetails/{materialId}",
+                arguments = listOf(navArgument("materialId") { type = NavType.StringType })
+            ) {
+                val materialId = it.arguments?.getString("materialId") ?: ""
+
+                NoteDetailsScreen(
+                    materialId = materialId,
+                    onBack = { navController.popBackStack() },
+                    onTakeQuiz = { quizId, topicTitle ->
+                        val encQuizId = URLEncoder.encode(quizId, "UTF-8")
+                        val encTopic = URLEncoder.encode(topicTitle, "UTF-8")
+                        navController.navigate("quizPlay/$encQuizId/$encTopic")
+                    }
+                )
+            }
+            composable(
+                route = "quizPlay/{quizId}/{topic}",
+                arguments = listOf(
+                    navArgument("quizId") { type = NavType.StringType },
+                    navArgument("topic") { type = NavType.StringType }
+                )
+            ) {
+                val quizId = it.arguments?.getString("quizId") ?: ""
+                val topic = it.arguments?.getString("topic") ?: ""
+                QuizPlayScreen(
+                    quizId = quizId,
+                    topic = topic,
+                    onDone = { navController.popBackStack() }
                 )
             }
 
