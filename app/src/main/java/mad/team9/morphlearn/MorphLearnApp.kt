@@ -127,7 +127,12 @@ fun MorphLearnApp(
                 QuizPlayScreen(
                     quizId = quizId,
                     topic = topic,
-                    onDone = { navController.popBackStack() }
+                    onDone = {
+                        navController.navigate("notes") {
+                            popUpTo("notes") { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
                 )
             }
 
