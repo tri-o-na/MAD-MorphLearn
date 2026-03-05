@@ -3,7 +3,7 @@ name: CI
 
 on:
   push:
-    branches: [ "main","dev", "login-register"]
+    branches: [ "main","dev", "login-register","ai-generated-notes"]
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
@@ -30,6 +30,8 @@ jobs:
       # Combined step: Check linting and run unit tests
       # 'testDebugUnitTest' is the standard for Android unit tests
       - name: Run Unit Tests
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: ./gradlew testDebugUnitTest
 
       # Optional: Uploads the test report so you can see what failed in the GitHub UI
