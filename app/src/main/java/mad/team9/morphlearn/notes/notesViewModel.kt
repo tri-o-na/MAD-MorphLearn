@@ -19,6 +19,7 @@ class NotesViewModel(
     fun loadMaterials() {
         viewModelScope.launch {
             try {
+                _error.value = null
                 _materials.value = repo.getAllMaterials()
             } catch (e: Exception) {
                 _error.value = e.message
