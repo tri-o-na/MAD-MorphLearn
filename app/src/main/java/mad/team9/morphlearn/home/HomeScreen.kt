@@ -45,5 +45,14 @@ fun HomeScreen(
         }) {
             Text("Logout")
         }
+        Button(onClick = {
+
+            navController?.navigate("notes") {
+                popUpTo("home") { inclusive = true }
+                // Optional: popUpTo("register") { inclusive = true }
+            }
+        }) {
+            Text("notes")
+        }
     }
 }

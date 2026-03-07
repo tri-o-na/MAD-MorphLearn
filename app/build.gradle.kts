@@ -68,6 +68,10 @@ dependencies {
 
     // Firebase
     implementation(platform(libs.firebase.bom))
+    implementation("androidx.compose.material:material-icons-extended")
+
+    // Firebase
+    implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.firestore)
     implementation(libs.androidx.compose.runtime)
     implementation(libs.androidx.appcompat)
@@ -88,4 +92,5 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
 }
