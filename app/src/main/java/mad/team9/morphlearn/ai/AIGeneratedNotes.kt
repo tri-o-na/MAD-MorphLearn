@@ -15,6 +15,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import mad.team9.morphlearn.login.FirebaseAuthManager
 import java.net.URLDecoder
@@ -28,7 +29,7 @@ fun AIGeneratedNotes(
     val decodedJson = remember(json) { URLDecoder.decode(json,"UTF-8") }
     val repository = remember { AINotesRepository(firestore) }
 
-    val userId = FirebaseAuthManager.currentUser?.uid
+    val userId = FirebaseAuth.getInstance().currentUser?.uid
 
     // Create the viewmodel
     val viewModel: AINotesViewModel = viewModel(
