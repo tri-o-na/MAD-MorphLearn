@@ -104,9 +104,9 @@ fun MorphLearnApp(
                         NavigationBarItem(
                             icon = { Icon(Icons.Default.LibraryBooks, contentDescription = "Library") },
                             label = { Text("Library") },
-                            selected = currentDestination?.hierarchy?.any { it.route == "library" } == true,
+                            selected = currentDestination?.hierarchy?.any { it.route == "notes" } == true,
                             onClick = {
-                                navController.navigate("library") {
+                                navController.navigate("notes") {
                                     popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                     launchSingleTop = true
                                     restoreState = true

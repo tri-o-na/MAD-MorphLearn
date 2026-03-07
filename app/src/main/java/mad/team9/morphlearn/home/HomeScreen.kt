@@ -260,14 +260,6 @@ fun HeaderSection(username: String, style: String, onLogout: () -> Unit) {
                 }
             }
         }
-        Button(onClick = {
 
-            navController?.navigate("notes") {
-                popUpTo("home") { inclusive = true }
-                // Optional: popUpTo("register") { inclusive = true }
-            }
-        }) {
-            Text("notes")
-        }
     }
 }
