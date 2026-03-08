@@ -16,11 +16,17 @@ import mad.team9.morphlearn.home.HomeScreen
 import mad.team9.morphlearn.login.LoginScreen
 import mad.team9.morphlearn.login.RegisterScreen
 import androidx.compose.ui.R
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
+import com.google.firebase.firestore.FirebaseFirestore
 import mad.team9.morphlearn.ai.AIFloatingActionButton
 import mad.team9.morphlearn.ai.AIGeneratedNotes
+import mad.team9.morphlearn.ai.AINotesRepository
+import mad.team9.morphlearn.ai.AINotesViewModel
 import mad.team9.morphlearn.ai.AIUploadPDF
 
 @Composable
@@ -41,6 +47,20 @@ fun MorphLearnApp(
             if (FirebaseAuth.getInstance().currentUser != null) "home" else "login"
         )
     }
+
+    val firestore = FirebaseFirestore.getInstance()
+    val repository = remember { AINotesRepository(firestore) }
+
+
+    // Create the viewmodel
+    val aiNotesViewModel: AINotesViewModel = viewModel(
+        factory = object : ViewModelProvider.Factory{
+            override fun<T: ViewModel> create(modelClass: Class<T>): T{
+                return AINotesViewModel(repository) as T
+            }
+        }
+    )
+
 
     AppScaffold(
         fab= {
@@ -90,15 +110,13 @@ fun MorphLearnApp(
             }
 
             composable("upload-PDF") {
-                AIUploadPDF(navController)
+                AIUploadPDF(navController,aiNotesViewModel)
             }
 
             composable(
-                route= "notes/{text}",
-                arguments = listOf(navArgument("text"){ type = NavType.StringType})
+                route= "ai-response-PDF",
             ) {
-                val notesJson = it.arguments?.getString("text") ?:""
-                AIGeneratedNotes(notesJson,navController)
+                AIGeneratedNotes(navController,aiNotesViewModel)
             }
         }
     }

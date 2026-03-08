@@ -19,6 +19,13 @@ class AINotesViewModel(private val repository: AINotesRepository): ViewModel() {
     private val _state = MutableStateFlow<AINoteState>(AINoteState.Idle)
     val state: StateFlow<AINoteState> = _state
 
+    private val _response = MutableStateFlow("")
+    val response: StateFlow<String> = _response
+
+    fun setReponse(response: String){
+        _response.value = response;
+    }
+
     fun processAndSave(json: String, userId: String?){
         viewModelScope.launch {
             try {

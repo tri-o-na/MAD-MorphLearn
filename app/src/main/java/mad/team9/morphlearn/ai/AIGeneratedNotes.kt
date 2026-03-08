@@ -21,28 +21,17 @@ import java.net.URLDecoder
 
 @Composable
 fun AIGeneratedNotes(
-    json: String,
     navController: NavController,
+    aiNotesViewModel: AINotesViewModel
 ){
-    val firestore = FirebaseFirestore.getInstance()
-    val decodedJson = remember(json) { URLDecoder.decode(json,"UTF-8") }
-    val repository = remember { AINotesRepository(firestore) }
-
     val userId = FirebaseAuthManager.currentUser?.uid
 
-    // Create the viewmodel
-    val viewModel: AINotesViewModel = viewModel(
-        factory = object : ViewModelProvider.Factory{
-            override fun<T: ViewModel> create(modelClass: Class<T>): T{
-                return AINotesViewModel(repository) as T
-            }
-        }
-    )
+    val state by aiNotesViewModel.state.collectAsState()
+    val response by aiNotesViewModel.response.collectAsState()
 
-    val state by viewModel.state.collectAsState()
-
-    LaunchedEffect(Unit) {
-        viewModel.processAndSave(decodedJson,userId)
+    LaunchedEffect(response) {
+        if (response.isNotEmpty())
+            aiNotesViewModel.processAndSave(response, userId)
     }
 
     when (state) {

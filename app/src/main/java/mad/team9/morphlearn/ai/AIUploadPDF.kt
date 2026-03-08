@@ -32,6 +32,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.viewmodel.compose.viewModel
 import mad.team9.morphlearn.BuildConfig
 import okhttp3.OkHttpClient
 import org.json.JSONArray
@@ -40,7 +41,7 @@ import java.net.URLEncoder
 import java.util.concurrent.TimeUnit
 
 @Composable
-fun AIUploadPDF(navController: NavController){
+fun AIUploadPDF(navController: NavController, aiNotesViewModel: AINotesViewModel){
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -58,8 +59,8 @@ fun AIUploadPDF(navController: NavController){
 
                 try{
                     val notes = uploadPDFToAI(context, uri, apiKey, aiModel)
-                    val encoded = URLEncoder.encode(notes, "UTF-8")
-                    navController.navigate("notes/$encoded")
+                    aiNotesViewModel.setReponse(notes)
+                    navController.navigate("ai-response-PDF")
 
                 } catch (e: Exception) {
                     Toast.makeText(context, e.message, Toast.LENGTH_LONG).show()
