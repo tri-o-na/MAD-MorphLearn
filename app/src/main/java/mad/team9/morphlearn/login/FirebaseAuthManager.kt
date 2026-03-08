@@ -1,8 +1,9 @@
-package mad.team9.morphlearn.login
+package mad.team9.morphlearn.login  // or a better package like auth
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.tasks.await
 
@@ -13,8 +14,7 @@ object FirebaseAuthManager {
     // ───────────────────────────────────────────────
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
-
-    val currentUser: FirebaseUser? get() = auth.currentUser
+    private val db: FirebaseFirestore get() = FirebaseFirestore.getInstance()
 
     suspend fun signIn(email: String, password: String): Result<FirebaseUser> = try {
         val result = auth.signInWithEmailAndPassword(email, password).await()
@@ -30,6 +30,31 @@ object FirebaseAuthManager {
         Result.failure(e)
     }
 
+    suspend fun saveLearningStyle(style: String): Result<Unit> = try {
+        val userId = auth.currentUser?.uid?: throw Exception("User not authenticated")
+
+        // Use SetOptions.merge() to avoid overwriting existing fields (like email)
+        db.collection("Users")
+            .document(userId)
+            .set(mapOf("learningStyle" to style), SetOptions.merge())
+            .await()
+
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    suspend fun isLearningStyleSet(): Boolean {
+        val uid = auth.currentUser?.uid ?: return false
+        return try {
+            val document = db.collection("Users").document(uid).get().await()
+            // Check if the field exists and is not empty
+            document.contains("learningStyle") && document.getString("learningStyle")?.isNotEmpty() == true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
     fun signOut() {
         auth.signOut()
     }
@@ -38,7 +63,7 @@ object FirebaseAuthManager {
     // Firestore profile helpers
     // ───────────────────────────────────────────────
 
-    private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
+
 
     /**
      * Creates a minimal user profile document in Firestore after signup.

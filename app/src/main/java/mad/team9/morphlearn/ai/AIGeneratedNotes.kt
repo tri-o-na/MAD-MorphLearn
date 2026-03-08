@@ -15,6 +15,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import mad.team9.morphlearn.login.FirebaseAuthManager
 import java.net.URLDecoder
@@ -24,7 +25,7 @@ fun AIGeneratedNotes(
     navController: NavController,
     aiNotesViewModel: AINotesViewModel
 ){
-    val userId = FirebaseAuthManager.currentUser?.uid
+    val userId = FirebaseAuth.getInstance().currentUser?.uid
 
     val state by aiNotesViewModel.state.collectAsState()
     val response by aiNotesViewModel.response.collectAsState()
