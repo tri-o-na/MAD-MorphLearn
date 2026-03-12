@@ -1,15 +1,17 @@
 package mad.team9.morphlearn.stylebasedquiz
 
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import io.mockk.verify
 import io.mockk.Runs
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import mad.team9.morphlearn.ai.AIQuizQuestion
 import org.junit.Test
+import kotlinx.coroutines.test.runTest
 
 class QuizTest {
 
@@ -98,7 +100,7 @@ class QuizTest {
     }
 
     @Test
-    fun `finishQuiz saves correct quiz result`() {
+    fun `finishQuiz saves correct quiz result`() = runTest {
         val fakeRepository = mockk<QuizResultRepository>()
         val q1 = AIQuizQuestion(
             question = "Capital of France?",
@@ -113,27 +115,33 @@ class QuizTest {
 
         every { fakeRepository.isAnswerCorrect(2, q1) } returns true
         every { fakeRepository.isAnswerCorrect(1, q2) } returns false
+        coEvery { fakeRepository.getNextAttemptNumber("user123", "material123") } returns 1
         every { fakeRepository.saveQuizAttempt(any(), any()) } just Runs
 
         val viewModel = QuizViewModel(fakeRepository)
 
         viewModel.submitAnswer(2, q1)
         viewModel.submitAnswer(1, q2)
+        
+        // Removed attemptNumber parameter as it is now handled internally by ViewModel
         viewModel.finishQuiz(
             userId = "user123",
             quizId = "quiz123",
+            materialId = "material123",
             totalQuestions = 2,
             topic = "Geography"
         )
 
-        verify {
+        coVerify {
             fakeRepository.saveQuizAttempt(
                 match {
                     it.userId == "user123" &&
                             it.quizId == "quiz123" &&
+                            it.materialId == "material123" &&
                             it.score == 1 &&
                             it.totalQuestions == 2 &&
-                            it.userAnswers == listOf(2, 1)
+                            it.userAnswers == listOf(2, 1) &&
+                            it.attemptNumber == 1
                 },
                 "Geography"
             )

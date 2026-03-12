@@ -1,8 +1,9 @@
 package mad.team9.morphlearn.stylebasedquiz
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
 import mad.team9.morphlearn.ai.AIQuizQuestion
-import mad.team9.morphlearn.ai.AINote
 
 class QuizViewModel(private val repository: QuizResultRepository) : ViewModel() {
 
@@ -22,16 +23,23 @@ class QuizViewModel(private val repository: QuizResultRepository) : ViewModel() 
         return isCorrect // UI person (Bryan) uses this Boolean to show Green/Red feedback
     }
 
-    fun finishQuiz(userId: String, quizId: String, totalQuestions: Int, topic: String) {
-        // 1. Create the QuizResult object (the "box")
-        val result = QuizResult(
-            userId = userId,
-            quizId = quizId,
-            score = score,
-            totalQuestions = totalQuestions,
-            userAnswers = userSelectedIndices
-        )
-        // 2. Pass the object and the topic to the repository
-        repository.saveQuizAttempt(result, topic)
+    fun finishQuiz(userId: String, quizId: String, materialId: String, totalQuestions: Int, topic: String) {
+        viewModelScope.launch {
+            // Fetch the dynamic attempt count
+            val nextAttempt = repository.getNextAttemptNumber(userId, materialId)
+
+            // 1. Create the QuizResult object (the "box")
+            val result = QuizResult(
+                userId = userId,
+                quizId = quizId,
+                materialId = materialId,
+                score = score,
+                totalQuestions = totalQuestions,
+                userAnswers = userSelectedIndices,
+                attemptNumber = nextAttempt
+            )
+            // 2. Pass the object and the topic to the repository
+            repository.saveQuizAttempt(result, topic)
+        }
     }
-    }
+}

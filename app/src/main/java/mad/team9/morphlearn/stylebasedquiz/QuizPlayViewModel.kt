@@ -95,22 +95,30 @@ class QuizPlayViewModel(
         val done = next >= s.questions.size
 
         if (done) {
-            val answers = s.selectedAnswers
-            val score = s.questions.indices.count { i ->
-                answers.getOrNull(i) == s.questions[i].correctIndex
+            viewModelScope.launch {
+                val answers = s.selectedAnswers
+                val score = s.questions.indices.count { i ->
+                    answers.getOrNull(i) == s.questions[i].correctIndex
+                }
+
+                val uid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+                
+                // NEW: Get the dynamic attempt count
+                val nextAttempt = resultRepo.getNextAttemptNumber(uid, s.materialId)
+                
+                val result = QuizResult(
+                    userId = uid,
+                    quizId = s.quizId,
+                    materialId = s.materialId,
+                    score = score,
+                    totalQuestions = s.questions.size,
+                    userAnswers = answers,
+                    attemptNumber = nextAttempt
+                )
+                resultRepo.saveQuizAttempt(result, topic)
+
+                _state.value = s.copy(finished = true, finalScore = score)
             }
-
-            val uid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-            val result = QuizResult(
-                userId = uid,
-                quizId = s.quizId,
-                score = score,
-                totalQuestions = s.questions.size,
-                userAnswers = answers
-            )
-            resultRepo.saveQuizAttempt(result, topic)
-
-            _state.value = s.copy(finished = true, finalScore = score)
         } else {
             _state.value = s.copy(
                 index = next,
