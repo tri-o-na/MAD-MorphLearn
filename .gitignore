@@ -16,3 +16,4 @@ local.properties
 /.idea
 /.idea/inspectionProfiles/Project_Default.xml
 /.idea/deploymentTargetSelector.xml
+*.iml

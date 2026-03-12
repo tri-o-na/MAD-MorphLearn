@@ -3,6 +3,8 @@ package mad.team9.morphlearn.stylebasedquiz
 import android.util.Log
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.AggregateSource
+import kotlinx.coroutines.tasks.await
 import mad.team9.morphlearn.ai.AIQuizQuestion
 
 class QuizResultRepository(
@@ -10,15 +12,34 @@ class QuizResultRepository(
 ) {
 
     /**
-     * TASK: Validate answers
-     * Compares user selection to the model merged from Adli's branch.
+     * Validate answers
+     * Compares user selection to AI answers.
      */
     fun isAnswerCorrect(selectedOptionIndex: Int, question: AIQuizQuestion): Boolean {
         return selectedOptionIndex == question.correctIndex
     }
 
     /**
-     * TASK: Store quiz attempt results
+     * Fetches the next attempt number for a specific material for a given user.
+     */
+    suspend fun getNextAttemptNumber(userId: String, materialId: String): Int {
+        return try {
+            val countQuery = db.collection("Users")
+                .document(userId)
+                .collection("QuizAttempts")
+                .whereEqualTo("materialId", materialId)
+                .count()
+
+            val snapshot = countQuery.get(AggregateSource.SERVER).await()
+            (snapshot.count + 1).toInt()
+        } catch (e: Exception) {
+            Log.e("QuizResultRepo", "Error getting attempt count", e)
+            1
+        }
+    }
+
+    /**
+     * Store quiz attempt results
      * Takes the QuizResult object and converts it to a Map to use server timestamps.
      */
     fun saveQuizAttempt(result: QuizResult, topic: String) {
@@ -26,9 +47,11 @@ class QuizResultRepository(
         val attemptData = hashMapOf(
             "userId" to result.userId,
             "quizId" to result.quizId,
+            "materialId" to result.materialId,
             "score" to result.score,
             "totalQuestions" to result.totalQuestions,
             "userAnswers" to result.userAnswers,
+            "attemptNumber" to result.attemptNumber,
             "topic" to topic,
             "timestamp" to FieldValue.serverTimestamp()
         )
