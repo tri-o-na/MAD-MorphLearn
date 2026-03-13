@@ -67,13 +67,27 @@ fun HomeScreen(
             }
         }
 
-        item {
-            SectionTitle("General Progress")
+        // 2. Subject Progress Section (Latest 3)
+        item { SectionTitle("Subject Progress") }
+        if (viewModel.latestSubjectProgress.isNotEmpty()) {
+            items(viewModel.latestSubjectProgress) { progress ->
+                DetailedSubjectProgressCard(progress)
+            }
+        } else {
+            item {
+                Text(
+                    "No quiz activity yet.",
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                    fontSize = 12.sp,
+                    color = Color.Gray
+                )
+            }
         }
 
-        item {
-            LibrarySummaryCard(viewModel.totalMaterials, onBottomNavItemSelected)
-        }
+//        item { SectionTitle("General Progress") }
+//        item {
+//            LibrarySummaryCard(viewModel.totalMaterials, onBottomNavItemSelected)
+//        }
 
         item { Spacer(Modifier.height(32.dp)) }
     }
@@ -107,30 +121,59 @@ fun SubjectStreakCard(subjectTitle: String, streakCount: Int) {
     }
 }
 
+//@Composable
+//fun LibrarySummaryCard(totalMaterials: Int, onBottomNavItemSelected: (String) -> Unit) {
+//    Card(
+//        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+//        colors = CardDefaults.cardColors(containerColor = Color.White),
+//        elevation = CardDefaults.cardElevation(2.dp)
+//    ) {
+//        Column(Modifier.padding(16.dp)) {
+//            Text("Your Materials", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFF006064))
+//            Text(
+//                "You currently have $totalMaterials items in your library.",
+//                fontSize = 12.sp,
+//                color = Color.Gray,
+//                modifier = Modifier.padding(top = 4.dp)
+//            )
+//            Spacer(Modifier.height(12.dp))
+//            Button(
+//                onClick = { onBottomNavItemSelected("Library") },
+//                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF006064)),
+//                shape = RoundedCornerShape(8.dp),
+//                modifier = Modifier.fillMaxWidth()
+//            ) {
+//                Text("Open Library", color = Color.White)
+//            }
+//        }
+//    }
+//}
+
 @Composable
-fun LibrarySummaryCard(totalMaterials: Int, onBottomNavItemSelected: (String) -> Unit) {
+fun DetailedSubjectProgressCard(progress: SubjectProgress) {
     Card(
-        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+        modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(2.dp)
+        elevation = CardDefaults.cardElevation(2.dp),
+        shape = RoundedCornerShape(12.dp)
     ) {
-        Column(Modifier.padding(16.dp)) {
-            Text("Your Materials", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFF006064))
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth()
+        ) {
             Text(
-                "You currently have $totalMaterials items in your library.",
+                text = progress.subject,
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp,
+                color = Color(0xFF2D3436)
+            )
+            Text(
+                text = "${progress.completedTopics}/${progress.totalTopics} topics • ${progress.accuracy}% accuracy",
                 fontSize = 12.sp,
                 color = Color.Gray,
                 modifier = Modifier.padding(top = 4.dp)
             )
-            Spacer(Modifier.height(12.dp))
-            Button(
-                onClick = { onBottomNavItemSelected("Library") },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF006064)),
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Open Library", color = Color.White)
-            }
         }
     }
 }

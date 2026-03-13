@@ -2,6 +2,7 @@ package mad.team9.morphlearn.home
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -22,6 +23,9 @@ class HomeViewModel : ViewModel() {
     // Streaks per subject
     val subjectStreaks = mutableStateMapOf<String, Int>()
 
+    // NEW: Latest 3 Subject Progress
+    val latestSubjectProgress = mutableStateListOf<SubjectProgress>()
+
     private var userListener: ListenerRegistration? = null
     private var materialsListener: ListenerRegistration? = null
     private var quizListener: ListenerRegistration? = null
@@ -41,68 +45,100 @@ class HomeViewModel : ViewModel() {
             totalMaterials = snapshot?.size() ?: 0
         }
 
-        // 3. Quiz Stats & Subject Streaks
+        // 3. Quiz Stats, Subject Streaks, and Subject Progress
         quizListener = userDocRef.collection("QuizAttempts").addSnapshotListener { snapshot, _ ->
             val attempts = snapshot?.documents ?: emptyList()
-            completedQuizzes = attempts.size
 
             if (attempts.isNotEmpty()) {
                 var totalPoints = 0.0
                 var totalQuestions = 0.0
                 val subjectDateMap = mutableMapOf<String, MutableSet<Long>>()
+                val uniqueMaterialIds = mutableSetOf<String>()
+
+                // Aggregation map for Subject Progress
+                val subjectAggMap = mutableMapOf<String, SubjectAggregator>()
 
                 for (doc in attempts) {
-                    totalPoints += doc.getLong("score")?.toDouble() ?: 0.0
-                    totalQuestions += doc.getLong("totalQuestions")?.toDouble() ?: 1.0
+                    val mId = doc.getString("materialId") ?: ""
+                    if (mId.isNotEmpty()) uniqueMaterialIds.add(mId)
 
-                    // Clean Subject Title (Remove + signs)
+                    val score = doc.getLong("score")?.toDouble() ?: 0.0
+                    val questions = doc.getLong("totalQuestions")?.toDouble() ?: 1.0
+                    val timestamp = doc.getTimestamp("timestamp")?.toDate() ?: Date()
+
+                    totalPoints += score
+                    totalQuestions += questions
+
+                    // Clean Topic Name
                     val rawTopic = doc.getString("topic") ?: "General"
                     val cleanTopic = rawTopic.replace("+", " ")
 
-                    val timestamp = doc.getTimestamp("timestamp")?.toDate()
-                    if (timestamp != null) {
-                        val normalizedDate = normalizeToMidnight(timestamp)
-                        subjectDateMap.getOrPut(cleanTopic) { mutableSetOf() }.add(normalizedDate)
-                    }
+                    // Update Aggregator for Subject Progress
+                    val agg = subjectAggMap.getOrPut(cleanTopic) { SubjectAggregator(timestamp) }
+                    agg.totalScore += score
+                    agg.totalQuestions += questions
+                    if (timestamp.after(agg.lastAttempt)) agg.lastAttempt = timestamp
+
+                    val normalizedDate = normalizeToMidnight(timestamp)
+                    subjectDateMap.getOrPut(cleanTopic) { mutableSetOf() }.add(normalizedDate)
                 }
 
+                // Update Stats
+                completedQuizzes = uniqueMaterialIds.size
                 successRate = "${((totalPoints / totalQuestions) * 100).toInt()}%"
 
-                // Calculate streaks for each subject
+                // Update Streaks
                 subjectStreaks.clear()
                 subjectDateMap.forEach { (topic, dates) ->
                     val streak = calculateStreakCount(dates)
-                    if (streak > 0) {
-                        subjectStreaks[topic] = streak
-                    }
+                    if (streak > 0) subjectStreaks[topic] = streak
+                }
+
+                // NEW: Update Subject Progress List (Latest 3)
+                latestSubjectProgress.clear()
+                val sortedList = subjectAggMap.toList()
+                    .sortedByDescending { it.second.lastAttempt }
+                    .take(3)
+
+                sortedList.forEach { (topic, data) ->
+                    val accuracy = ((data.totalScore / data.totalQuestions) * 100).toInt()
+                    latestSubjectProgress.add(
+                        SubjectProgress(
+                            subject = topic,
+                            completedTopics = 1, // Logic can be expanded to count unique materialIds per topic
+                            totalTopics = 1,
+                            accuracy = accuracy,
+                            currentStreak = 0,
+                            longestStreak = 0
+                        )
+                    )
                 }
             } else {
                 successRate = "0%"
+                completedQuizzes = 0
                 subjectStreaks.clear()
+                latestSubjectProgress.clear()
             }
         }
     }
 
-    // API 24 Friendly: Use Calendar to remove time components
     private fun normalizeToMidnight(date: Date): Long {
         val cal = Calendar.getInstance()
         cal.time = date
         cal.set(Calendar.HOUR_OF_DAY, 0)
         cal.set(Calendar.MINUTE, 0)
         cal.set(Calendar.SECOND, 0)
-        cal.set(Calendar.MILLISECOND, 0) // Fixed reference
+        cal.set(Calendar.MILLISECOND, 0)
         return cal.timeInMillis
     }
 
     private fun calculateStreakCount(dates: Set<Long>): Int {
         if (dates.isEmpty()) return 0
-
         val cal = Calendar.getInstance()
         val today = normalizeToMidnight(cal.time)
         cal.add(Calendar.DATE, -1)
         val yesterday = normalizeToMidnight(cal.time)
 
-        // Streak broken if no activity today or yesterday
         if (!dates.contains(today) && !dates.contains(yesterday)) return 0
 
         var streak = 0
@@ -122,4 +158,11 @@ class HomeViewModel : ViewModel() {
         materialsListener?.remove()
         quizListener?.remove()
     }
+
+    // Helper class for data processing
+    private data class SubjectAggregator(
+        var lastAttempt: Date,
+        var totalScore: Double = 0.0,
+        var totalQuestions: Double = 0.0
+    )
 }
