@@ -209,7 +209,6 @@ fun MorphLearnApp(
                     HomeScreen(
                         username = displayName,
                         navController = navController,
-                        bottomNavItems = listOf("Library", "Home", "Profile"),
                         onBottomNavItemSelected = { selectedRoute ->
                             navController.navigate(selectedRoute.lowercase()) {
                                 popUpTo(navController.graph.findStartDestination().id) { saveState = true }
@@ -221,6 +220,7 @@ fun MorphLearnApp(
                 }
             composable("notes") {
                 NotesScreen(
+                    navController = navController,
                     onOpenTopic = { materialId ->
                         navController.navigate("noteDetails/$materialId")
                     }
