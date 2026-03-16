@@ -217,7 +217,8 @@ fun HeaderSection(username: String, style: String, onLogout: () -> Unit) {
                     Spacer(Modifier.width(12.dp))
                     Column {
                         Text("Your Learning Style", color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp)
-                        Text(style, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                        val displayStyle = style.replace("_", "/")
+                        Text(displayStyle, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     }
                 }
             }

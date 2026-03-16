@@ -58,7 +58,10 @@ fun ProfileScreen(viewModel: ProfileViewModel = viewModel()) {
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 ProfileDetailItem(label = "Email", value = viewModel.email)
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                ProfileDetailItem(label = "Learner Type", value = viewModel.learnerType)
+                ProfileDetailItem(
+                    label = "Learner Type",
+                    value = viewModel.learnerType.replace("_", "/")
+                )
             }
         }
     }
