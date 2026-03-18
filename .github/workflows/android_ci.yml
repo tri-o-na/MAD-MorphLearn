@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ "main","dev", "login-register","ai-generated-notes","NotesScreen", "user-profile"]
+    branches: [ "main","dev", "login-register","ai-generated-notes","NotesScreen", "user-profile", "subject-backend"]
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:

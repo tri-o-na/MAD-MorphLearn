@@ -6,97 +6,21 @@ import okhttp3.MediaType.Companion.toMediaType
 import android.content.Context
 import android.net.Uri
 import android.util.Base64
-import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import androidx.compose.runtime.setValue
-import androidx.lifecycle.viewmodel.compose.viewModel
 import mad.team9.morphlearn.BuildConfig
 import okhttp3.OkHttpClient
 import org.json.JSONArray
 import org.json.JSONObject
-import java.net.URLEncoder
 import java.util.concurrent.TimeUnit
-
-@Composable
-fun AIUploadPDF(navController: NavController, aiNotesViewModel: AINotesViewModel){
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-
-    var isLoading by remember { mutableStateOf(false) }
-
-    val apiKey = BuildConfig.GEMINI_API_KEY
-    val aiModel = "gemini-2.5-flash-lite"
-
-    val pickerLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-            uri ?: return@rememberLauncherForActivityResult
-
-            scope.launch {
-                isLoading = true
-
-                try{
-                    val notes = uploadPDFToAI(context, uri, apiKey, aiModel)
-                    aiNotesViewModel.setReponse(notes)
-                    navController.navigate("ai-response-PDF")
-
-                } catch (e: Exception) {
-                    Toast.makeText(context, e.message, Toast.LENGTH_LONG).show()
-                }
-
-                isLoading = false
-            }
-        }
-
-    LaunchedEffect(Unit) {
-        pickerLauncher.launch(arrayOf("application/pdf"))
-    }
-
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        if (isLoading) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                CircularProgressIndicator()
-                Spacer(Modifier.height(16.dp))
-                Text("Uploading PDF to AI...")
-            }
-        }
-        else {
-            Text("")
-        }
-    }
-}
 
 suspend fun uploadPDFToAI(
     context: Context,
     uri: Uri,
-    apiKey: String,
-    aiModel: String,
 ): String = withContext(Dispatchers.IO){
+    val apiKey = BuildConfig.GEMINI_API_KEY
+    val aiModel = "gemini-2.5-flash-lite"
+
     val inputStream = context.contentResolver.openInputStream(uri)
     val pdfBytes = inputStream!!.readBytes()
 

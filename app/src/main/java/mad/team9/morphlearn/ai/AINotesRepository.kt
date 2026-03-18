@@ -4,6 +4,7 @@ import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import org.json.JSONObject
+import javax.security.auth.Subject
 
 class AINotesRepository(
     private val firestore: FirebaseFirestore
@@ -16,6 +17,9 @@ class AINotesRepository(
 
         val notes = root.optString("generatedNotes")
         require(notes.isNotBlank()) { "Generated notes missing" }
+
+        val subjectId = root.optString("subjectId")
+        require(subjectId.isNotBlank()) {"Subject ID missing"}
 
         val questionsArray = root.optJSONArray("questions")
             ?: throw IllegalArgumentException("Generated questions missing")
@@ -53,9 +57,8 @@ class AINotesRepository(
                 )
             )
         }
-        return AINote(title, notes, questions)
+        return AINote(title, generatedNotes = notes, subjectId, questions = questions)
     }
-
 
     suspend fun saveNoteAndQuiz(userId: String, note: AINote){
         val userRef = firestore.collection("Users").document(userId)
@@ -66,6 +69,7 @@ class AINotesRepository(
         val materialData = mapOf(
             "title" to note.title,
             "generatedNotes" to note.generatedNotes,
+            "subjectId" to note.subjectId,
             "timestamp" to Timestamp.now()
         )
 
@@ -88,23 +92,20 @@ class AINotesRepository(
         batch.commit().await()
     }
 
-//    suspend fun saveQuiz(userId: String, materialId: String, questions: List<AIQuizQuestion>){
-//        val data = mapOf(
-//            "materialId" to materialId,
-//            "questions" to questions.map{
-//                mapOf(
-//                    "question" to it.question,
-//                    "options" to it.options,
-//                    "correctIndex" to it.correctIndex
-//                )
-//            },
-//            "timestamp" to Timestamp.now()
-//        )
-//
-//        firestore.collection("Users")
-//            .document(userId)
-//            .collection("Quizzes")
-//            .add(data)
-//            .await()
-//    }
+    suspend fun getOrCreateSubjectId(userId: String, subject: String): String{
+        val userSubjectsRef = firestore.collection("Users").document(userId).collection("Subjects")
+
+        val query = userSubjectsRef.whereEqualTo("name", subject).limit(1).get().await()
+
+        if (query.isEmpty){
+            val newSubjectRef = userSubjectsRef.document()
+            val subjectData = mapOf(
+                "name" to subject,
+                "timestamp" to Timestamp.now()
+            )
+            newSubjectRef.set(subjectData).await()
+            return newSubjectRef.id
+        }
+        else return query.documents[0].id
+    }
 }

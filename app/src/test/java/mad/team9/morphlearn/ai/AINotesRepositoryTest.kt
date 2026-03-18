@@ -23,6 +23,7 @@ class AINotesRepositoryTest {
             {
                 "title": "Test Title",
                 "generatedNotes": "Test Generated Notes",
+                "subjectId": "sGn2NITo0swbuyZw0DFP",
                 "questions": [
                     {
                         "question": "Test Question 1",
@@ -42,6 +43,7 @@ class AINotesRepositoryTest {
 
         assertEquals("Test Title", note.title)
         assertEquals("Test Generated Notes", note.generatedNotes)
+        assertEquals("sGn2NITo0swbuyZw0DFP",note.subjectId)
 
         val questions: List<AIQuizQuestion> = note.questions
 
@@ -75,6 +77,7 @@ class AINotesRepositoryTest {
         val validJson = AINote(
             title = "Valid Title",
             generatedNotes = "Valid Notes",
+            subjectId = "sGn2NITo0swbuyZw0DFP",
             questions = listOf(
                 AIQuizQuestion(
                     question = "Valid Question",
