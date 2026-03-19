@@ -31,6 +31,16 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
+private val chartColors = listOf(
+    Color(0xFF006064), // Teal
+    Color(0xFFA78BFA), // Purple
+    Color(0xFFFFCC80), // Orange
+    Color(0xFFF06292), // Pink
+    Color(0xFF4DB6AC), // Light Teal
+    Color(0xFF7986CB), // Indigo
+    Color(0xFF9CCC65)  // Light Green
+)
+
 @Composable
 fun HomeScreen(
     username: String,
@@ -231,52 +241,84 @@ fun RadarChartCard(data: List<RadarData>) {
                         )
                     }
 
-                    // Draw Axes
+                    // Draw Axes with Subject Colors
                     data.forEachIndexed { index, _ ->
+                        val color = chartColors[index % chartColors.size]
                         val angle = index * angleStep - (PI / 2).toFloat()
                         val lineEndX = centerX + radius * cos(angle)
                         val lineEndY = centerY + radius * sin(angle)
                         drawLine(
-                            color = Color.LightGray,
+                            color = color.copy(alpha = 0.3f),
                             start = center,
                             end = Offset(lineEndX, lineEndY),
                             strokeWidth = 1.dp.toPx()
                         )
                     }
 
-                    // Draw Data Polygon
-                    val path = Path()
+                    // Draw Data Polygon Segments (Shaded Triangles)
+                    data.forEachIndexed { index, _ ->
+                        val color = chartColors[index % chartColors.size]
+                        val nextIndex = (index + 1) % numPoints
+                        
+                        val angle1 = index * angleStep - (PI / 2).toFloat()
+                        val valueRadius1 = (data[index].averageAccuracy / 100f) * radius
+                        val x1 = centerX + valueRadius1 * cos(angle1)
+                        val y1 = centerY + valueRadius1 * sin(angle1)
+                        
+                        val angle2 = nextIndex * angleStep - (PI / 2).toFloat()
+                        val valueRadius2 = (data[nextIndex].averageAccuracy / 100f) * radius
+                        val x2 = centerX + valueRadius2 * cos(angle2)
+                        val y2 = centerY + valueRadius2 * sin(angle2)
+                        
+                        val segmentPath = Path().apply {
+                            moveTo(centerX, centerY)
+                            lineTo(x1, y1)
+                            lineTo(x2, y2)
+                            close()
+                        }
+                        
+                        // Fill the triangular segment with the subject's color
+                        drawPath(
+                            path = segmentPath,
+                            color = color.copy(alpha = 0.35f),
+                            style = Fill
+                        )
+                        
+                        // Draw the outer border line for this segment
+                        drawLine(
+                            color = Color.DarkGray.copy(alpha = 0.4f),
+                            start = Offset(x1, y1),
+                            end = Offset(x2, y2),
+                            strokeWidth = 1.5.dp.toPx()
+                        )
+                    }
+
+                    // Draw points with specific colors
                     data.forEachIndexed { index, radarData ->
+                        val color = chartColors[index % chartColors.size]
                         val angle = index * angleStep - (PI / 2).toFloat()
                         val valueRadius = (radarData.averageAccuracy / 100f) * radius
                         val x = centerX + valueRadius * cos(angle)
                         val y = centerY + valueRadius * sin(angle)
-                        if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                        
+                        drawCircle(color, 5.dp.toPx(), Offset(x, y))
+                        drawCircle(Color.White, 2.5.dp.toPx(), Offset(x, y))
                     }
-                    path.close()
-
-                    drawPath(
-                        path = path,
-                        color = Color(0xFF006064).copy(alpha = 0.3f),
-                        style = Fill
-                    )
-                    drawPath(
-                        path = path,
-                        color = Color(0xFF006064),
-                        style = Stroke(width = 2.dp.toPx())
-                    )
                 }
                 
-                // Legend or Labels
-                Row(
-                    Modifier.fillMaxWidth(),
+                Spacer(Modifier.height(8.dp))
+
+                // Legend with matching colors
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    data.take(3).forEach {
-                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 8.dp)) {
-                            Box(Modifier.size(8.dp).background(Color(0xFF006064), RoundedCornerShape(2.dp)))
+                    data.forEachIndexed { index, item ->
+                        val color = chartColors[index % chartColors.size]
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)) {
+                            Box(Modifier.size(8.dp).background(color, RoundedCornerShape(2.dp)))
                             Spacer(Modifier.width(4.dp))
-                            Text(it.subjectName, fontSize = 10.sp, color = Color.Gray)
+                            Text(item.subjectName, fontSize = 10.sp, color = Color.Gray)
                         }
                     }
                 }
