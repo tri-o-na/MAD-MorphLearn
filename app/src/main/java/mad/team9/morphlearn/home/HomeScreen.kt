@@ -87,7 +87,7 @@ fun HomeScreen(
         }
 
         // Subject Progress Section (Latest 3)
-        item { SectionTitle("Recent Topic Progress") }
+        item { SectionTitle("Recent Subject Progress") }
         if (viewModel.latestSubjectProgress.isNotEmpty()) {
             items(viewModel.latestSubjectProgress) { progress ->
                 DetailedSubjectProgressCard(progress)
@@ -169,17 +169,40 @@ fun DetailedSubjectProgressCard(progress: SubjectProgress) {
                 .padding(16.dp)
                 .fillMaxWidth()
         ) {
-            Text(
-                text = progress.subject,
-                fontWeight = FontWeight.Bold,
-                fontSize = 15.sp,
-                color = Color(0xFF2D3436)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = progress.subject,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp,
+                    color = Color(0xFF2D3436)
+                )
+                Text(
+                    text = "${progress.completedTopics}/${progress.totalTopics} Topics",
+                    fontSize = 12.sp,
+                    color = Color.Gray
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            LinearProgressIndicator(
+                progress = { if (progress.totalTopics > 0) progress.completedTopics.toFloat() / progress.totalTopics else 0f },
+                modifier = Modifier.fillMaxWidth().height(8.dp),
+                color = Color(0xFF006064),
+                trackColor = Color(0xFFE0F2F1),
+                strokeCap = StrokeCap.Round
             )
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
             Text(
                 text = "${progress.accuracy}% accuracy",
                 fontSize = 12.sp,
-                color = Color.Gray,
-                modifier = Modifier.padding(top = 4.dp)
+                color = Color.Gray
             )
         }
     }
