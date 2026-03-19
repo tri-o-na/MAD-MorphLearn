@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import androidx.compose.ui.graphics.Color
 import java.util.Calendar
 import java.util.Date
 
@@ -29,6 +30,13 @@ class HomeViewModel : ViewModel() {
     private var userListener: ListenerRegistration? = null
     private var materialsListener: ListenerRegistration? = null
     private var quizListener: ListenerRegistration? = null
+
+    var radarDataList = mutableStateListOf<RadarData>()
+    var selectedSubjectForLineChart by mutableStateOf<String?>(null)
+    var topicTrends = mutableStateListOf<TopicTrend>()
+
+    // Cache for dropdown switches
+    private var allTopicData = mutableMapOf<String, Map<String, List<ProgressPoint>>>()
 
     fun fetchUserData() {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
@@ -150,6 +158,87 @@ class HomeViewModel : ViewModel() {
             checkCal.add(Calendar.DATE, -1)
         }
         return streak
+    }
+
+    // Colors for the 3 lines in the chart
+    private val topicColors = listOf(Color(0xFF006064), Color(0xFFA78BFA), Color(0xFFFFCC80))
+
+    fun fetchChartData() {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val db = FirebaseFirestore.getInstance()
+        val userRef = db.collection("Users").document(userId)
+
+        // Helper: Map MaterialID -> SubjectName
+        userRef.collection("Materials").get().addOnSuccessListener { materialsSnap ->
+            val matToSubId = materialsSnap.associate { it.id to (it.getString("subjectId") ?: "") }
+
+            userRef.collection("Subjects").get().addOnSuccessListener { subjectsSnap ->
+                val subIdToName = subjectsSnap.associate { it.id to (it.getString("name") ?: "Unknown") }
+
+                // Now listen to QuizAttempts to build the charts
+                userRef.collection("QuizAttempts").addSnapshotListener { quizSnap, _ ->
+                    val attempts = quizSnap?.documents ?: return@addSnapshotListener
+
+                    val subjectAggregator = mutableMapOf<String, MutableList<Double>>()
+                    val topicLineAggregator = mutableMapOf<String, MutableMap<String, MutableList<ProgressPoint>>>()
+
+                    attempts.forEach { doc ->
+                        val mId = doc.getString("materialId") ?: ""
+                        val sId = matToSubId[mId] ?: ""
+                        val subjectName = subIdToName[sId] ?: "General"
+                        val topicName = doc.getString("topic")?.replace("+", " ") ?: "General"
+                        val score = doc.getLong("score")?.toDouble() ?: 0.0
+                        val total = doc.getLong("totalQuestions")?.toDouble() ?: 1.0
+                        val accuracy = (score / total) * 100
+                        val date = doc.getTimestamp("timestamp")?.toDate()?.let { normalizeToMidnight(it) } ?: 0L
+
+                        // For Radar Chart
+                        subjectAggregator.getOrPut(subjectName) { mutableListOf() }.add(accuracy)
+
+                        // For Line Chart (Subject -> Topic -> Points)
+                        val subjectMap = topicLineAggregator.getOrPut(subjectName) { mutableMapOf() }
+                        val points = subjectMap.getOrPut(topicName) { mutableListOf() }
+                        points.add(ProgressPoint(date.toString(), accuracy.toInt()))
+                    }
+
+                    // Update Radar Data
+                    radarDataList.clear()
+                    subjectAggregator.forEach { (name, list) ->
+                        radarDataList.add(RadarData(name, list.average().toFloat()))
+                    }
+
+                    // Cache for line charts
+                    allTopicData = topicLineAggregator.mapValues { entry ->
+                        entry.value.mapValues { it.value.toList() }
+                    }.toMutableMap()
+
+                    // Initialize dropdown if empty
+                    if (selectedSubjectForLineChart == null && radarDataList.isNotEmpty()) {
+                        selectedSubjectForLineChart = radarDataList.first().subjectName
+                    }
+
+                    // Update Line Chart based on selection
+                    updateTopicLines(allTopicData)
+                }
+            }
+        }
+    }
+
+    fun onSubjectSelected(subject: String) {
+        selectedSubjectForLineChart = subject
+        updateTopicLines(allTopicData)
+    }
+
+    private fun updateTopicLines(agg: Map<String, Map<String, List<ProgressPoint>>>) {
+        val selected = selectedSubjectForLineChart ?: return
+        topicTrends.clear()
+        val topicsForSubject = agg[selected]?.toList()
+            ?.sortedByDescending { it.second.lastOrNull()?.date ?: "" } // Latest 3 based on date
+            ?.take(3) ?: emptyList()
+
+        topicsForSubject.forEachIndexed { index, (name, points) ->
+            topicTrends.add(TopicTrend(name, points.sortedBy { it.date }, topicColors[index % topicColors.size]))
+        }
     }
 
     override fun onCleared() {
