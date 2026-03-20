@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import mad.team9.morphlearn.ui.theme.*
 
 @Composable
 fun RegisterScreen(
@@ -30,21 +31,21 @@ fun RegisterScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     val scope = rememberCoroutineScope()
-    val primaryTeal = Color(0xFF006064)
 
     if (showTermsDialog) {
         AlertDialog(
             onDismissRequest = { showTermsDialog = false },
-            title = { Text("AI Usage Consent") },
-            text = { Text("MorphLearn uses AI to personalize your study materials based on your learning diagnostics. Your data is strictly used for educational optimization.") },
+            title = { Text("AI Usage Consent", color = TextDark) },
+            text = { Text("MorphLearn uses AI to personalize your study materials based on your learning diagnostics. Your data is strictly used for educational optimization.", color = TextDark) },
             confirmButton = {
-                TextButton(onClick = { showTermsDialog = false }) { Text("Close", color = primaryTeal) }
-            }
+                TextButton(onClick = { showTermsDialog = false }) { Text("Close", color = MorphTeal) }
+            },
+            containerColor = Color.White
         )
     }
 
     Box(
-        modifier = Modifier.fillMaxSize().background(Color(0xFFF8F9FA)),
+        modifier = Modifier.fillMaxSize().background(BackgroundGray),
         contentAlignment = Alignment.Center
     ) {
         ElevatedCard(
@@ -60,7 +61,7 @@ fun RegisterScreen(
                 // Header Icon
                 Surface(
                     shape = CircleShape,
-                    color = primaryTeal,
+                    color = MorphTeal,
                     modifier = Modifier.size(56.dp)
                 ) {
                     Icon(
@@ -74,32 +75,40 @@ fun RegisterScreen(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-                Text("MorphLearn", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                Text("MorphLearn", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = TextDark)
                 Text("Personalized Learning", color = Color.Gray, style = MaterialTheme.typography.bodyMedium)
 
                 Spacer(modifier = Modifier.height(32.dp))
 
                 // Email Field
-                Text("Email", modifier = Modifier.fillMaxWidth(), fontWeight = FontWeight.SemiBold)
+                Text("Email", modifier = Modifier.fillMaxWidth(), fontWeight = FontWeight.SemiBold, color = TextDark)
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
                     placeholder = { Text("your@email.com", color = Color.LightGray) },
                     modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MorphTeal,
+                        unfocusedBorderColor = Color.LightGray
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Password Field
-                Text("Password", modifier = Modifier.fillMaxWidth(), fontWeight = FontWeight.SemiBold)
+                Text("Password", modifier = Modifier.fillMaxWidth(), fontWeight = FontWeight.SemiBold, color = TextDark)
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
                     placeholder = { Text("••••••••", color = Color.LightGray) },
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MorphTeal,
+                        unfocusedBorderColor = Color.LightGray
+                    )
                 )
 
                 // Consent Section
@@ -110,10 +119,10 @@ fun RegisterScreen(
                     Checkbox(
                         checked = hasConsented,
                         onCheckedChange = { hasConsented = it },
-                        colors = CheckboxDefaults.colors(checkedColor = primaryTeal)
+                        colors = CheckboxDefaults.colors(checkedColor = MorphTeal)
                     )
                     TextButton(onClick = { showTermsDialog = true }, contentPadding = PaddingValues(0.dp)) {
-                        Text("I consent to AI data collection", style = MaterialTheme.typography.bodySmall, color = primaryTeal)
+                        Text("I consent to AI data collection", style = MaterialTheme.typography.bodySmall, color = MorphTeal)
                     }
                 }
 
@@ -137,7 +146,7 @@ fun RegisterScreen(
                     },
                     modifier = Modifier.fillMaxWidth().height(56.dp),
                     enabled = !isLoading && hasConsented,
-                    colors = ButtonDefaults.buttonColors(containerColor = primaryTeal),
+                    colors = ButtonDefaults.buttonColors(containerColor = MorphTeal),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     if (isLoading) {
@@ -153,7 +162,7 @@ fun RegisterScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
                 TextButton(onClick = onBackToLogin) {
-                    Text("Already have an account? Log in", color = Color(0xFFA688FA))
+                    Text("Already have an account? Log in", color = MorphPurple)
                 }
             }
         }

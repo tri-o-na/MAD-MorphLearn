@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import mad.team9.morphlearn.ui.theme.*
 
 @Composable
 fun LoginScreen(
@@ -27,10 +28,9 @@ fun LoginScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     val scope = rememberCoroutineScope()
-    val primaryTeal = Color(0xFF006064)
 
     Box(
-        modifier = Modifier.fillMaxSize().background(Color(0xFFF8F9FA)),
+        modifier = Modifier.fillMaxSize().background(BackgroundGray),
         contentAlignment = Alignment.Center
     ) {
         ElevatedCard(
@@ -45,7 +45,7 @@ fun LoginScreen(
             ) {
                 Surface(
                     shape = CircleShape,
-                    color = primaryTeal,
+                    color = MorphTeal,
                     modifier = Modifier.size(56.dp)
                 ) {
                     Icon(
@@ -57,30 +57,38 @@ fun LoginScreen(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-                Text("MorphLearn", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                Text("MorphLearn", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = TextDark)
                 Text("Personalized Learning", color = Color.Gray, style = MaterialTheme.typography.bodyMedium)
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                Text("Email", modifier = Modifier.fillMaxWidth(), fontWeight = FontWeight.SemiBold)
+                Text("Email", modifier = Modifier.fillMaxWidth(), fontWeight = FontWeight.SemiBold, color = TextDark)
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
                     placeholder = { Text("your@email.com", color = Color.LightGray) },
                     modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MorphTeal,
+                        unfocusedBorderColor = Color.LightGray
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Text("Password", modifier = Modifier.fillMaxWidth(), fontWeight = FontWeight.SemiBold)
+                Text("Password", modifier = Modifier.fillMaxWidth(), fontWeight = FontWeight.SemiBold, color = TextDark)
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
                     placeholder = { Text("••••••••", color = Color.LightGray) },
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MorphTeal,
+                        unfocusedBorderColor = Color.LightGray
+                    )
                 )
 
                 if (errorMessage != null) {
@@ -101,7 +109,7 @@ fun LoginScreen(
                     },
                     modifier = Modifier.fillMaxWidth().height(56.dp),
                     enabled = !isLoading,
-                    colors = ButtonDefaults.buttonColors(containerColor = primaryTeal),
+                    colors = ButtonDefaults.buttonColors(containerColor = MorphTeal),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     if (isLoading) {
@@ -117,7 +125,7 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
                 TextButton(onClick = onNavigateToRegister) {
-                    Text("Don't have an account? Sign up", color = Color(0xFFA688FA))
+                    Text("Don't have an account? Sign up", color = MorphPurple)
                 }
             }
         }

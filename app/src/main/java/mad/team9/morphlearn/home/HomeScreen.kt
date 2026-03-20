@@ -27,18 +27,19 @@ import androidx.navigation.NavController
 import mad.team9.morphlearn.login.FirebaseAuthManager
 import androidx.compose.foundation.Canvas
 import androidx.compose.material.icons.filled.ArrowDropDown
+import mad.team9.morphlearn.ui.theme.*
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
 private val chartColors = listOf(
-    Color(0xFF006064), // Teal
-    Color(0xFFA78BFA), // Purple
-    Color(0xFFFFCC80), // Orange
-    Color(0xFFF06292), // Pink
-    Color(0xFF4DB6AC), // Light Teal
-    Color(0xFF7986CB), // Indigo
-    Color(0xFF9CCC65)  // Light Green
+    MorphTeal,
+    MorphPurple,
+    MorphOrange,
+    MorphPink,
+    MorphLightTeal,
+    MorphIndigo,
+    MorphLightGreen
 )
 
 @Composable
@@ -57,7 +58,7 @@ fun HomeScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFF8F9FA))
+            .background(BackgroundGray)
     ) {
         item {
             HeaderSection(
@@ -87,7 +88,7 @@ fun HomeScreen(
         }
 
         // Subject Progress Section (Latest 3)
-        item { SectionTitle("Recent Subject Progress") }
+        item { SectionTitle("Recent Topic Progress") }
         if (viewModel.latestSubjectProgress.isNotEmpty()) {
             items(viewModel.latestSubjectProgress) { progress ->
                 DetailedSubjectProgressCard(progress)
@@ -133,24 +134,24 @@ fun SubjectStreakCard(subjectTitle: String, streakCount: Int) {
     Card(
         modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Color(0xFFFFE0B2))
+        border = BorderStroke(1.dp, BorderOrange)
     ) {
         Row(
             modifier = Modifier
-                .background(Brush.horizontalGradient(listOf(Color(0xFFFFF3E0), Color(0xFFFFEBEE))))
+                .background(Brush.horizontalGradient(listOf(GradientOrangeStart, GradientPinkEnd)))
                 .padding(16.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(subjectTitle, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = Color(0xFF2D3436))
+                Text(subjectTitle, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = TextDark)
                 Text("Daily Streak", fontSize = 12.sp, color = Color.Gray)
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Whatshot, null, tint = Color(0xFFFF7043), modifier = Modifier.size(28.dp))
+                Icon(Icons.Default.Whatshot, null, tint = StreakOrange, modifier = Modifier.size(28.dp))
                 Spacer(Modifier.width(4.dp))
-                Text(streakCount.toString(), fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFFFF7043))
+                Text(streakCount.toString(), fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, color = StreakOrange)
             }
         }
     }
@@ -169,40 +170,17 @@ fun DetailedSubjectProgressCard(progress: SubjectProgress) {
                 .padding(16.dp)
                 .fillMaxWidth()
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = progress.subject,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp,
-                    color = Color(0xFF2D3436)
-                )
-                Text(
-                    text = "${progress.completedTopics}/${progress.totalTopics} Topics",
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            LinearProgressIndicator(
-                progress = { if (progress.totalTopics > 0) progress.completedTopics.toFloat() / progress.totalTopics else 0f },
-                modifier = Modifier.fillMaxWidth().height(8.dp),
-                color = Color(0xFF006064),
-                trackColor = Color(0xFFE0F2F1),
-                strokeCap = StrokeCap.Round
+            Text(
+                text = progress.subject,
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp,
+                color = TextDark
             )
-            
-            Spacer(modifier = Modifier.height(4.dp))
-            
             Text(
                 text = "${progress.accuracy}% accuracy",
                 fontSize = 12.sp,
-                color = Color.Gray
+                color = Color.Gray,
+                modifier = Modifier.padding(top = 4.dp)
             )
         }
     }
@@ -213,7 +191,7 @@ fun SubjectDropdown(viewModel: HomeViewModel) {
     var expanded by remember { mutableStateOf(false) }
     Box {
         TextButton(onClick = { expanded = true }) {
-            Text(viewModel.selectedSubjectForLineChart ?: "Select Subject", color = Color(0xFF006064))
+            Text(viewModel.selectedSubjectForLineChart ?: "Select Subject", color = MorphTeal)
             Icon(Icons.Default.ArrowDropDown, null)
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
@@ -426,7 +404,7 @@ fun SectionTitle(title: String, modifier: Modifier = Modifier) {
         modifier = modifier.padding(start = 20.dp, top = 16.dp, bottom = 8.dp),
         fontWeight = FontWeight.Bold,
         fontSize = 16.sp,
-        color = Color(0xFF2D3436)
+        color = TextDark
     )
 }
 
@@ -435,7 +413,7 @@ fun HeaderSection(username: String, style: String, onLogout: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFF006064), RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp))
+            .background(MorphTeal, RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp))
             .padding(top = 24.dp, start = 20.dp, end = 20.dp, bottom = 60.dp)
     ) {
         Column {
@@ -461,7 +439,12 @@ fun HeaderSection(username: String, style: String, onLogout: () -> Unit) {
             ) {
                 Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        if (style.contains("Read", true)) Icons.AutoMirrored.Filled.MenuBook else Icons.Default.TouchApp,
+                        imageVector = when {
+                            style.contains("Read", ignoreCase = true) -> Icons.AutoMirrored.Filled.MenuBook
+                            style.contains("Visual", ignoreCase = true) -> Icons.Default.RemoveRedEye
+                            style.contains("Auditory", ignoreCase = true) -> Icons.Default.Hearing
+                            else -> Icons.Default.TouchApp
+                        },
                         contentDescription = null,
                         tint = Color.White,
                         modifier = Modifier.size(32.dp)
@@ -486,9 +469,9 @@ fun StatsGrid(viewModel: HomeViewModel) {
             .offset(y = (-40).dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        StatCard(viewModel.completedQuizzes.toString(), "Completed", Icons.Default.CheckCircle, Color(0xFF006064), Modifier.weight(1f))
-        StatCard(viewModel.totalMaterials.toString(), "Materials", Icons.AutoMirrored.Filled.LibraryBooks, Color(0xFFA78BFA), Modifier.weight(1f))
-        StatCard(viewModel.successRate, "Rate", Icons.Default.EmojiEvents, Color(0xFFA78BFA), Modifier.weight(1f))
+        StatCard(viewModel.completedQuizzes.toString(), "Completed", Icons.Default.CheckCircle, MorphTeal, Modifier.weight(1f))
+        StatCard(viewModel.totalMaterials.toString(), "Materials", Icons.AutoMirrored.Filled.LibraryBooks, MorphPurple, Modifier.weight(1f))
+        StatCard(viewModel.successRate, "Rate", Icons.Default.EmojiEvents, MorphPurple, Modifier.weight(1f))
     }
 }
 
@@ -505,7 +488,7 @@ fun StatCard(value: String, label: String, icon: ImageVector, color: Color, modi
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(24.dp))
-            Text(value, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2D3436))
+            Text(value, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TextDark)
             Text(label, fontSize = 11.sp, color = Color.Gray)
         }
     }
