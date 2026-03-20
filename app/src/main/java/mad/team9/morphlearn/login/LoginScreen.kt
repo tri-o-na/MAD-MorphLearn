@@ -1,97 +1,125 @@
 package mad.team9.morphlearn.login
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import androidx.compose.ui.R
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: (String) -> Unit,           // e.g. pass UID or email
-    onNavigateToRegister: () -> Unit,
-    modifier: Modifier = Modifier
+    onLoginSuccess: (String) -> Unit,
+    onNavigateToRegister: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    val coroutineScope = rememberCoroutineScope()
+    val scope = rememberCoroutineScope()
+    val primaryTeal = Color(0xFF006064)
 
-    Column(
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier.fillMaxSize().padding(16.dp)
+    Box(
+        modifier = Modifier.fillMaxSize().background(Color(0xFFF8F9FA)),
+        contentAlignment = Alignment.Center
     ) {
-        Text(text = "Login", style = MaterialTheme.typography.displayLarge)
-
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it; errorMessage = null },
-            label = { Text("Email") },
-            modifier = Modifier.padding(8.dp).fillMaxWidth()
-        )
-
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it; errorMessage = null },
-            label = { Text("Password") },
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.padding(8.dp).fillMaxWidth()
-        )
-
-        errorMessage?.let {
-            Text(
-                text = it,
-                color = Color.Red,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-        }
-
-        if (isLoading) {
-            CircularProgressIndicator(modifier = Modifier.padding(16.dp))
-        }
-
-        Button(
-            onClick = {
-                if (email.isBlank() || password.isBlank()) {
-                    errorMessage = "Please fill in all fields"
-                    return@Button
+        ElevatedCard(
+            modifier = Modifier.fillMaxWidth(0.85f).padding(vertical = 32.dp),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.elevatedCardColors(containerColor = Color.White),
+            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Surface(
+                    shape = CircleShape,
+                    color = primaryTeal,
+                    modifier = Modifier.size(56.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Login,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.padding(12.dp)
+                    )
                 }
-                isLoading = true
-                errorMessage = null
 
-                coroutineScope.launch {
-                    val result = FirebaseAuthManager.signIn(email.trim(), password)
-                    isLoading = false
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("MorphLearn", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                Text("Personalized Learning", color = Color.Gray, style = MaterialTheme.typography.bodyMedium)
 
-                    result.onSuccess { user ->
-                        onLoginSuccess(user.uid)           // or user.email!!
-                    }.onFailure { e ->
-                        errorMessage = when {
-                            e.message?.contains("INVALID_LOGIN_CREDENTIALS") == true ||
-                                    e.message?.contains("INVALID_EMAIL") == true -> "Invalid email or password"
-                            e.message?.contains("network") == true -> "Network error. Check connection"
-                            else -> e.message ?: "Login failed"
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Text("Email", modifier = Modifier.fillMaxWidth(), fontWeight = FontWeight.SemiBold)
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    placeholder = { Text("your@email.com", color = Color.LightGray) },
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text("Password", modifier = Modifier.fillMaxWidth(), fontWeight = FontWeight.SemiBold)
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    placeholder = { Text("••••••••", color = Color.LightGray) },
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                if (errorMessage != null) {
+                    Text(errorMessage!!, color = Color.Red, modifier = Modifier.padding(top = 8.dp))
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Button(
+                    onClick = {
+                        isLoading = true
+                        scope.launch {
+                            val result = FirebaseAuthManager.signIn(email.trim(), password)
+                            isLoading = false
+                            result.onSuccess { onLoginSuccess(it.uid) }
+                                .onFailure { errorMessage = "Invalid email or password" }
                         }
+                    },
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    enabled = !isLoading,
+                    colors = ButtonDefaults.buttonColors(containerColor = primaryTeal),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Log In")
                     }
                 }
-            },
-            enabled = !isLoading && email.isNotEmpty() && password.isNotEmpty(),
-            modifier = Modifier.padding(16.dp).fillMaxWidth()
-        ) {
-            Text("Login")
-        }
 
-        TextButton(onClick = onNavigateToRegister) {
-            Text("Don't have an account? Register")
+                Spacer(modifier = Modifier.height(16.dp))
+                TextButton(onClick = onNavigateToRegister) {
+                    Text("Don't have an account? Sign up", color = Color(0xFFA688FA))
+                }
+            }
         }
     }
 }

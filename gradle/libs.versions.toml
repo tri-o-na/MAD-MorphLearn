@@ -1,5 +1,5 @@
 [versions]
-agp = "8.13.1"
+agp = "9.0.1"
 kotlin = "2.2.10"
 coreKtx = "1.17.0"
 junit = "4.13.2"
@@ -19,6 +19,8 @@ coroutinesTest = "1.10.2"
 runtime = "1.10.3"
 appcompat = "1.7.1"
 foundation = "1.10.4"
+foundationVersion = "1.10.5"
+uiText = "1.10.5"
 
 [libraries]
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
@@ -46,6 +48,8 @@ firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore
 androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "runtime" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
+androidx-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundationVersion" }
+androidx-compose-ui-text = { group = "androidx.compose.ui", name = "ui-text", version.ref = "uiText" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
