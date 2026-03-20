@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Gradle: androidx.window:window-core-android:1.3.0@aar" external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$USER_HOME$/.gradle/caches/8.13/transforms/00a2971e0bfe462f0b5442790d6db0bf/transformed/window-core-release/res" />
+      <root url="file://$USER_HOME$/.gradle/caches/8.13/transforms/00a2971e0bfe462f0b5442790d6db0bf/transformed/window-core-release/AndroidManifest.xml" />
+      <root url="jar://$USER_HOME$/.gradle/caches/8.13/transforms/00a2971e0bfe462f0b5442790d6db0bf/transformed/window-core-release/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/androidx.window/window-core-android/1.3.0/8d965c472ab77d3235e76a505df297e61f967796/window-core-android-1.3.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
