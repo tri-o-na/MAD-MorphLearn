@@ -90,12 +90,25 @@ class NotesTest {
     private class FakeMaterialsDataSource(
         private val materials: List<Material> = emptyList(),
         private val shouldThrow: Boolean = false,
-        private val exceptionMessage: String = "Unknown error"
+        private val exceptionMessage: String = "Unknown error",
+
+        private var hasAttempted: Boolean = false,
+        private var quizId: String? = null
     ) : MaterialsDataSource {
 
         override suspend fun getAllMaterials(): List<Material> {
             if (shouldThrow) throw Exception(exceptionMessage)
             return materials
+        }
+
+        override suspend fun checkQuizAttempt(quizId: String?): Boolean {
+            if (shouldThrow) throw Exception(exceptionMessage)
+            return hasAttempted
+        }
+
+        override suspend fun getLatestQuiz(materialId: String): String? {
+            if (shouldThrow) throw Exception(exceptionMessage)
+            return quizId
         }
     }
 }
