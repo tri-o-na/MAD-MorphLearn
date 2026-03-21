@@ -20,6 +20,24 @@ fun DragDropQuizScreen(
     val primaryTeal = Color(0xFF006064)
     var isFinished by remember { mutableStateOf(false) }
     var finalScore by remember { mutableStateOf(0) }
+    
+    // Page state to limit to 3 questions
+    var currentPage by remember { mutableStateOf(0) }
+    val pageSize = 3
+    
+    // Track total user answers across pages - using remember with questions as key
+    val allDropTargets = remember(questions) {
+        questions.map { q ->
+            DropTargetState(
+                questionId = q.question,
+                questionText = q.question,
+                correctAnswer = q.options.getOrElse(q.correctIndex) { "" }
+            )
+        }
+    }
+    
+    val currentTargets = allDropTargets.drop(currentPage * pageSize).take(pageSize)
+    val currentQuestions = questions.drop(currentPage * pageSize).take(pageSize)
 
     if (isFinished) {
         QuizResultScreen(
@@ -28,51 +46,75 @@ fun DragDropQuizScreen(
             onDone = { onFinish(finalScore) }
         )
     } else {
-        val dropTargets = remember {
-            questions.map { q ->
-                DropTargetState(
-                    questionId = q.question,
-                    questionText = q.question,
-                    correctAnswer = q.options.getOrElse(q.correctIndex) { "" }
-                )
-            }
+        // Shuffle answers per page
+        val availableAnswers = remember(currentPage, currentQuestions) {
+            currentQuestions.map { it.options[it.correctIndex] }.shuffled()
         }
 
-        val availableAnswers = questions.map { it.options[it.correctIndex] }
-
         Column(modifier = Modifier.fillMaxSize().padding(20.dp)) {
-            Text("Match the Answers", style = MaterialTheme.typography.headlineMedium, color = primaryTeal)
+            val totalPages = (questions.size + pageSize - 1) / pageSize
+            Text(
+                text = "Match the Answers (${currentPage + 1}/$totalPages)", 
+                style = MaterialTheme.typography.headlineMedium, 
+                color = primaryTeal
+            )
 
             LazyColumn(modifier = Modifier.weight(1f)) {
-                items(dropTargets) { target ->
+                // ADDED KEY: This ensures each question slot refreshes its position on page change
+                items(currentTargets, key = { it.questionId }) { target ->
                     QuestionSlot(state = target)
                 }
             }
 
             Text("Answer Bank", style = MaterialTheme.typography.labelLarge)
 
-            FlowRow(modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)) {
+            FlowRow(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 availableAnswers.forEach { answer ->
-                    DraggableAnswer(
-                        content = answer,
-                        dropTargets = dropTargets,
-                        onMatchFound = { target, matchedValue ->
-                            target.currentAnswer = matchedValue
-                        }
-                    )
+                    // ADDED KEY: Ensures draggable state doesn't leak between pages
+                    key(answer + currentPage) {
+                        DraggableAnswer(
+                            content = answer,
+                            dropTargets = currentTargets,
+                            onMatchFound = { target, matchedValue ->
+                                target.currentAnswer = matchedValue
+                            }
+                        )
+                    }
                 }
             }
 
-            Button(
-                onClick = {
-                    val score = dropTargets.count { it.currentAnswer == it.correctAnswer }
-                    finalScore = score
-                    isFinished = true
-                },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = primaryTeal)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text("Finish Quiz")
+                if (currentPage > 0) {
+                    OutlinedButton(
+                        onClick = { currentPage-- },
+                        modifier = Modifier.weight(1f).height(56.dp)
+                    ) {
+                        Text("Previous")
+                    }
+                }
+
+                val isLastPage = (currentPage + 1) * pageSize >= questions.size
+                Button(
+                    onClick = {
+                        if (isLastPage) {
+                            finalScore = allDropTargets.count { it.currentAnswer == it.correctAnswer }
+                            isFinished = true
+                        } else {
+                            currentPage++
+                        }
+                    },
+                    modifier = Modifier.weight(1f).height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = primaryTeal)
+                ) {
+                    Text(if (isLastPage) "Finish Quiz" else "Next")
+                }
             }
         }
     }

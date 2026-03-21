@@ -16,20 +16,23 @@ fun QuizLayoutSelector(
     onDone: () -> Unit,
     standardQuizUI: @Composable () -> Unit
 ) {
-    when (learningStyle) {
-        "Kinesthetic" -> {
+    // Normalize the string for comparison
+    val normalizedStyle = learningStyle.trim().lowercase()
+
+    when (normalizedStyle) {
+        "KINESTHETIC" -> {
             DragDropQuizScreen(
                 questions = state.questions,
                 onFinish = onFinish
             )
         }
-        "Visual" -> {
+        "VISUAL" -> {
             TextPlaceholder("Visual: Flashcard Quiz coming soon")
         }
-        "Read/Write" -> {
+        "READ_WRITE", "readwrite" -> {
             TextPlaceholder("Read/Write: Fill in the Blank Quiz coming soon")
         }
-        "Auditory" -> {
+        "auditory" -> {
             TextPlaceholder("Auditory: MCQ with Text-to-Speech coming soon")
         }
         else -> {
