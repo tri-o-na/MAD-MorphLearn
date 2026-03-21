@@ -272,7 +272,10 @@ fun MorphLearnApp(
                                 val encQuizId = URLEncoder.encode(quizId, "UTF-8")
                                 val encTopic = URLEncoder.encode(topicTitle, "UTF-8")
                                 navController.navigate("quizPlay/$encQuizId/$encTopic")
-                            }
+                            },
+                            onRegenerateQuiz = { materialId ->
+                                aiNotesViewModel.regenerateQuiz(materialId)
+                            },
                         )
                     }
                     composable(
@@ -322,7 +325,7 @@ fun MorphLearnApp(
                         CircularProgressIndicator(color = Color.White, strokeWidth = 4.dp)
                         Spacer(modifier= Modifier.height(16.dp))
                         Text(
-                            text="AI is analyzing your PDF...",
+                            text="AI is analyzing...",
                             color = Color.White,
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Bold

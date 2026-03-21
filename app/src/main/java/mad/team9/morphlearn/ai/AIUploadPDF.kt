@@ -91,3 +91,80 @@ suspend fun uploadPDFToAI(
         .getJSONObject(0)
         .getString("text")
 }
+
+suspend fun generateNewQuiz(weakQuestions: List<String>, notes: String): String = withContext(Dispatchers.IO) {
+    val apiKey = BuildConfig.GEMINI_API_KEY
+    val aiModel = "gemini-2.5-flash-lite"
+
+    val userWeaknessContext =
+        "User had attempted a previous quiz based on the same notes but had gotten the following wrong questions: ${
+            weakQuestions.joinToString(", ")
+        }"
+
+    val prompt = """
+        Generate a quiz based on the following material:
+        $notes
+        
+        Context:
+        $userWeaknessContext
+        
+        Return the result in the following JSON format:
+        {
+            "questions": [
+                {
+                    "question": "<question text>",
+                    "options": ["option1", "option2", "option3", "option4"],
+                    "correctIndex": <number>
+                }
+            ]
+        }
+        
+        Rules:
+        1. Do NOT include markdown
+        2. Do NOT include explanations
+        3. Do Not wrap the JSON in backticks
+        4. Return ONLY the JSON object
+        5. Do NOT add or modify the JSON keys
+        6. Ensure options array always has 4 items
+        7. Ensure correctIndex must match one option index
+    """.trimIndent()
+
+    val requestBodyJson = JSONObject().apply {
+        val contentsArray = JSONArray().apply {
+            put(JSONObject().apply {
+                put("parts", JSONArray().apply {
+                    put(JSONObject().apply { put("text", prompt) })
+                })
+            })
+        }
+        put("contents", contentsArray)
+
+        put("generationConfig", JSONObject().apply {
+            put("response_mime_type", "application/json")
+
+        })
+    }
+
+    val request = Request.Builder()
+        .url("https://generativelanguage.googleapis.com/v1beta/models/$aiModel:generateContent?key=$apiKey")
+        .post(requestBodyJson.toString().toRequestBody("application/json".toMediaType()))
+        .build()
+
+    val client = OkHttpClient.Builder()
+        .connectTimeout(60, TimeUnit.SECONDS)
+        .writeTimeout(60, TimeUnit.SECONDS)
+        .readTimeout(120, TimeUnit.SECONDS)
+        .build()
+
+    val response = client.newCall(request).execute()
+    val result = response.body?.string() ?: ""
+
+    val parsed = JSONObject(result)
+    parsed
+        .getJSONArray("candidates")
+        .getJSONObject(0)
+        .getJSONObject("content")
+        .getJSONArray("parts")
+        .getJSONObject(0)
+        .getString("text")
+}
