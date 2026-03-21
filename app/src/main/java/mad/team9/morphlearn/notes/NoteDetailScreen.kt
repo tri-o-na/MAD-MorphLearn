@@ -1,5 +1,6 @@
 package mad.team9.morphlearn.notes
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -34,12 +35,20 @@ fun NoteDetailsScreen(
     materialId: String,
     viewModel: NotesViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
     onTakeQuiz: (quizId: String, topicTitle: String) -> Unit,
+    onRegenerateQuiz: (materialId: String) -> Unit,
     onBack: () -> Unit = {}
 ) {
     val materials by viewModel.materials.collectAsState()
     val error by viewModel.error.collectAsState()
 
+    val quizId by viewModel.quizId.collectAsState()
+    val hasAttemptedQuiz by viewModel.hasAttemptedQuiz.collectAsState()
+
     LaunchedEffect(Unit) { viewModel.loadMaterials() }
+    LaunchedEffect(materialId) { viewModel.getQuizIdByMaterialId(materialId) }
+    LaunchedEffect(quizId) { viewModel.checkQuizAttempt(quizId) }
+
+    Log.d("CHECK_QUIZ_ID", "Quiz ID: $quizId")
 
     val material = materials.firstOrNull { it.id == materialId }
 
@@ -88,20 +97,39 @@ fun NoteDetailsScreen(
 
         Spacer(Modifier.height(12.dp))
 
-        val scope = rememberCoroutineScope()
-        val quizRepo = remember { QuizFetchRepository() }
+        Row() {
+            val scope = rememberCoroutineScope()
+            val quizRepo = remember { QuizFetchRepository() }
 
-        Button(
-            onClick = {
-                scope.launch {
-                    val quizId = quizRepo.getQuizIdByMaterialId(materialId)
-                    if (quizId != null) onTakeQuiz(quizId, material.title)
-                    else android.util.Log.e("NOTE_DETAILS", "No quiz found for materialId=$materialId")
+            Button(
+                onClick = {
+                    scope.launch {
+
+                        if (quizId != null) onTakeQuiz(quizId!!, material.title)
+                        else android.util.Log.e(
+                            "NOTE_DETAILS",
+                            "No quiz found for materialId=$materialId"
+                        )
+                    }
+                },
+                modifier = Modifier.fillMaxWidth().weight(1f)
+            ) {
+                Text("Take Quiz")
+            }
+
+            if (hasAttemptedQuiz) {
+                Spacer(Modifier.weight(0.5f))
+
+                Button(
+                    onClick = {
+                        viewModel.resetForNewQuiz()
+                        onRegenerateQuiz(materialId)
+                    },
+                    modifier = Modifier.fillMaxWidth().weight(1f)
+                ) {
+                    Text("Regenerate Quiz")
                 }
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Take Quiz")
+            }
         }
     }
 }

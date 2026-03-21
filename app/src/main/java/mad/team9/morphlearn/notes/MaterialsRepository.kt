@@ -44,4 +44,35 @@ class MaterialsRepository(
             generatedNotes = doc.getString("generatedNotes") ?: ""
         )
     }
+
+    override suspend fun getLatestQuiz(materialId: String): String? {
+        val doc = db.collection("Users")
+            .document(uid())
+            .collection("Quizzes")
+            .whereEqualTo("materialId", materialId)
+            .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .limit(1)
+            .get()
+            .await()
+
+        if (doc.isEmpty) return null
+
+        return doc.documents.first().id
+    }
+
+    override suspend fun checkQuizAttempt(quizId: String?): Boolean {
+        val snapshot = db.collection("Users")
+            .document(uid())
+            .collection("QuizAttempts")
+            .whereEqualTo("quizId", quizId)
+            .orderBy("timestamp")
+            .limit(1)
+            .get()
+            .await()
+
+        // if no documents, return false. else return true
+        if (snapshot.isEmpty) return false
+
+        return true
+    }
 }
