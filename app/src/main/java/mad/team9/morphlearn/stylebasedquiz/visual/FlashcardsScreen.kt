@@ -1,6 +1,5 @@
 package mad.team9.morphlearn.stylebasedquiz.visual
 
-import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
@@ -31,11 +30,15 @@ import mad.team9.morphlearn.ui.theme.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FlashcardsScreen(
+    materialId: String,
     onBackToLibrary: () -> Unit,
     onBackToHome: () -> Unit,
     viewModel: FlashcardsViewModel = viewModel()
 ) {
-    // Handle system back press
+    LaunchedEffect(materialId) {
+        viewModel.loadQuizData(materialId)
+    }
+
     BackHandler {
         onBackToLibrary()
     }
@@ -46,6 +49,19 @@ fun FlashcardsScreen(
             total = viewModel.totalCards,
             onBackToHome = onBackToHome
         )
+    } else if (viewModel.isLoading) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = MorphTeal)
+        }
+    } else if (viewModel.errorMessage != null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(viewModel.errorMessage!!, color = Color.Red)
+                Button(onClick = onBackToLibrary, colors = ButtonDefaults.buttonColors(containerColor = MorphTeal)) {
+                    Text("Go Back")
+                }
+            }
+        }
     } else {
         Scaffold(
             topBar = {
@@ -60,7 +76,8 @@ fun FlashcardsScreen(
                         containerColor = MorphTeal,
                         titleContentColor = Color.White,
                         navigationIconContentColor = Color.White
-                    )
+                    ),
+                    windowInsets = WindowInsets(0, 0, 0, 0)
                 )
             },
             containerColor = BackgroundGray
@@ -73,7 +90,7 @@ fun FlashcardsScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Progress Bar
-                val progress = (viewModel.currentCardIndex + 1).toFloat() / viewModel.totalCards
+                val progress = if (viewModel.totalCards > 0) (viewModel.currentCardIndex + 1).toFloat() / viewModel.totalCards else 0f
                 LinearProgressIndicator(
                     progress = { progress },
                     modifier = Modifier
@@ -99,7 +116,7 @@ fun FlashcardsScreen(
                         FlashcardItem(
                             card = card,
                             isAnswerRevealed = viewModel.isAnswerRevealed,
-                            onReveal = { viewModel.revealAnswer() },
+                            onToggle = { viewModel.toggleAnswer() },
                             onSkip = { viewModel.skipCard() }
                         )
                     }
@@ -146,7 +163,7 @@ fun FlashcardsScreen(
                         }
                     }
                     
-                    if (!viewModel.isAnswerRevealed) {
+                    if (!viewModel.isAnswerRevealed && !viewModel.isLoading) {
                         Text(
                             text = "Tap the card to see the answer",
                             modifier = Modifier.align(Alignment.Center),
@@ -164,7 +181,7 @@ fun FlashcardsScreen(
 fun FlashcardItem(
     card: Flashcard,
     isAnswerRevealed: Boolean,
-    onReveal: () -> Unit,
+    onToggle: () -> Unit,
     onSkip: () -> Unit
 ) {
     val rotation by animateFloatAsState(
@@ -176,82 +193,89 @@ fun FlashcardItem(
         modifier = Modifier
             .fillMaxWidth()
             .height(400.dp)
-            .graphicsLayer {
-                rotationY = rotation
-                cameraDistance = 12f * density
-            }
-            .clip(RoundedCornerShape(24.dp))
-            .background(Color.White)
-            .clickable(enabled = !isAnswerRevealed) { onReveal() }
-            .padding(24.dp)
     ) {
+        // Main Flipping Card
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    rotationY = rotation
+                    cameraDistance = 12f * density
+                }
+                .clip(RoundedCornerShape(24.dp))
+                .background(Color.White)
+                .clickable { onToggle() }
+                .padding(24.dp)
+        ) {
+            if (rotation <= 90f) {
+                // Front side: Question
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Surface(
+                        color = MorphTeal.copy(alpha = 0.1f),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = "QUESTION",
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MorphTeal,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text(
+                        text = card.qn,
+                        style = MaterialTheme.typography.headlineSmall,
+                        textAlign = TextAlign.Center,
+                        color = TextDark,
+                        lineHeight = 32.sp
+                    )
+                }
+            } else {
+                // Back side: Answer
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer { rotationY = 180f },
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Surface(
+                        color = MorphPurple.copy(alpha = 0.1f),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = "ANSWER",
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MorphPurple,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text(
+                        text = card.ans,
+                        style = MaterialTheme.typography.headlineMedium,
+                        textAlign = TextAlign.Center,
+                        color = TextDark,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+
+        // Skip Button - outside the flipping box so it stays fixed in the top right
         TextButton(
             onClick = onSkip,
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .graphicsLayer { 
-                    if (rotation > 90f) rotationY = 180f 
-                }
+                .padding(8.dp)
         ) {
             Text("Skip", color = MorphTeal, fontWeight = FontWeight.Bold)
-        }
-
-        if (rotation <= 90f) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Surface(
-                    color = MorphTeal.copy(alpha = 0.1f),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text(
-                        text = "QUESTION",
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MorphTeal,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                Spacer(modifier = Modifier.height(24.dp))
-                Text(
-                    text = card.qn,
-                    style = MaterialTheme.typography.headlineSmall,
-                    textAlign = TextAlign.Center,
-                    color = TextDark,
-                    lineHeight = 32.sp
-                )
-            }
-        } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .graphicsLayer { rotationY = 180f },
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Surface(
-                    color = MorphPurple.copy(alpha = 0.1f),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text(
-                        text = "ANSWER",
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MorphPurple,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                Spacer(modifier = Modifier.height(24.dp))
-                Text(
-                    text = card.ans,
-                    style = MaterialTheme.typography.headlineMedium,
-                    textAlign = TextAlign.Center,
-                    color = TextDark,
-                    fontWeight = FontWeight.Bold
-                )
-            }
         }
     }
 }
@@ -344,33 +368,3 @@ fun FlashcardsResultScreen(
         }
     }
 }
-
-//@SuppressLint("ViewModelConstructorInComposable")
-//@Preview(showBackground = true, showSystemUi = true)
-//@Composable
-//fun FlashcardsScreenPreview() {
-//    // We create a local ViewModel instance for the preview
-//    val previewViewModel = FlashcardsViewModel()
-//
-//    // We wrap your existing Screen function
-//    FlashcardsScreen(
-//        onBackToLibrary = {},
-//        onBackToHome = {},
-//        viewModel = previewViewModel
-//    )
-//}
-
-//@SuppressLint("ViewModelConstructorInComposable")
-//@Preview(showBackground = true, showSystemUi = true)
-//@Composable
-//fun FlashcardsScreenAnswerPreview() {
-//    val previewViewModel = FlashcardsViewModel().apply {
-//        revealAnswer() // This forces the state to 'true' for this specific preview
-//    }
-//
-//    FlashcardsScreen(
-//        onBackToLibrary = {},
-//        onBackToHome = {},
-//        viewModel = previewViewModel
-//    )
-//}
