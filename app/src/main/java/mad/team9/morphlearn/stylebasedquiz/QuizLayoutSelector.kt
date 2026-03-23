@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import mad.team9.morphlearn.stylebasedquiz.kinesthetic.DragDropQuizScreen
+import mad.team9.morphlearn.stylebasedquiz.visual.FlashcardsScreen
 
 @Composable
 fun QuizLayoutSelector(
@@ -17,7 +18,7 @@ fun QuizLayoutSelector(
     standardQuizUI: @Composable () -> Unit
 ) {
     // Normalize the string for comparison
-    val normalizedStyle = learningStyle.trim().lowercase()
+    val normalizedStyle = learningStyle.trim().uppercase()
 
     when (normalizedStyle) {
         "KINESTHETIC" -> {
@@ -27,12 +28,16 @@ fun QuizLayoutSelector(
             )
         }
         "VISUAL" -> {
-            TextPlaceholder("Visual: Flashcard Quiz coming soon")
+            FlashcardsScreen(
+                materialId = state.materialId,
+                onBackToLibrary = onDone,
+                onBackToHome = onDone
+            )
         }
         "READ_WRITE", "readwrite" -> {
             TextPlaceholder("Read/Write: Fill in the Blank Quiz coming soon")
         }
-        "auditory" -> {
+        "AUDITORY" -> {
             TextPlaceholder("Auditory: MCQ with Text-to-Speech coming soon")
         }
         else -> {
