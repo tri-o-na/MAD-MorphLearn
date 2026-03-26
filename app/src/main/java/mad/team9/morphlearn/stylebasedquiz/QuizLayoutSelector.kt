@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import mad.team9.morphlearn.stylebasedquiz.kinesthetic.DragDropQuizScreen
 import mad.team9.morphlearn.stylebasedquiz.visual.FlashcardsScreen
+import mad.team9.morphlearn.stylebasedquiz.readwrite.FillBlankScreen
 
 @Composable
 fun QuizLayoutSelector(
@@ -35,7 +36,11 @@ fun QuizLayoutSelector(
             )
         }
         "READ_WRITE", "readwrite" -> {
-            TextPlaceholder("Read/Write: Fill in the Blank Quiz coming soon")
+            FillBlankScreen(
+                materialId = state.materialId,
+                onBackToLibrary = onDone,
+                onBackToHome = onDone
+            )
         }
         "AUDITORY" -> {
             TextPlaceholder("Auditory: MCQ with Text-to-Speech coming soon")
