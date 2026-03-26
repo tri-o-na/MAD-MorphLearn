@@ -38,7 +38,7 @@ fun QuizLayoutSelector(
             TextPlaceholder("Read/Write: Fill in the Blank Quiz coming soon")
         }
         "AUDITORY" -> {
-            TextPlaceholder("Auditory: MCQ with Text-to-Speech coming soon")
+            standardQuizUI()
         }
         else -> {
             // Use the passed standard UI

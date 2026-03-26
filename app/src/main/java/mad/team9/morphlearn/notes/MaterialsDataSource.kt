@@ -6,4 +6,6 @@ interface MaterialsDataSource {
     suspend fun checkQuizAttempt(quizId: String?): Boolean
     suspend fun getLatestQuiz(materialId: String): String?
 
+    suspend fun getLearningStyle(): String?
+
 }

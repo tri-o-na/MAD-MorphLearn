@@ -18,13 +18,17 @@ fun DragDropQuizScreen(
     onFinish: (Int) -> Unit
 ) {
     val primaryTeal = Color(0xFF006064)
+    val feedbackControl = remember { mad.team9.morphlearn.stylebasedquiz.QuizAnswerFeedbackControl() }
     var isFinished by remember { mutableStateOf(false) }
     var finalScore by remember { mutableStateOf(0) }
-    
+
     // Page state to limit to 3 questions
     var currentPage by remember { mutableStateOf(0) }
     val pageSize = 3
-    
+
+    // ADDED: confirm state so user must confirm before going next
+    var confirmed by remember { mutableStateOf(false) }
+
     // Track total user answers across pages - using remember with questions as key
     val allDropTargets = remember(questions) {
         questions.map { q ->
@@ -35,7 +39,7 @@ fun DragDropQuizScreen(
             )
         }
     }
-    
+
     val currentTargets = allDropTargets.drop(currentPage * pageSize).take(pageSize)
     val currentQuestions = questions.drop(currentPage * pageSize).take(pageSize)
 
@@ -54,15 +58,29 @@ fun DragDropQuizScreen(
         Column(modifier = Modifier.fillMaxSize().padding(20.dp)) {
             val totalPages = (questions.size + pageSize - 1) / pageSize
             Text(
-                text = "Match the Answers (${currentPage + 1}/$totalPages)", 
-                style = MaterialTheme.typography.headlineMedium, 
+                text = "Match the Answers (${currentPage + 1}/$totalPages)",
+                style = MaterialTheme.typography.headlineMedium,
                 color = primaryTeal
             )
 
             LazyColumn(modifier = Modifier.weight(1f)) {
                 // ADDED KEY: This ensures each question slot refreshes its position on page change
                 items(currentTargets, key = { it.questionId }) { target ->
-                    QuestionSlot(state = target)
+                    val isCorrect = if (confirmed) {
+                        feedbackControl.isDragDropAnswerCorrect(
+                            target.currentAnswer,
+                            target.correctAnswer
+                        )
+                    } else {
+                        null
+                    }
+
+                    QuestionSlot(
+                        state = target,
+                        enabled = !confirmed,
+                        backgroundColor = feedbackControl.getFeedbackColor(confirmed, isCorrect),
+                        borderColor = feedbackControl.getBorderColor(confirmed, isCorrect)
+                    )
                 }
             }
 
@@ -79,8 +97,11 @@ fun DragDropQuizScreen(
                         DraggableAnswer(
                             content = answer,
                             dropTargets = currentTargets,
+                            enabled = !confirmed,
                             onMatchFound = { target, matchedValue ->
-                                target.currentAnswer = matchedValue
+                                if (!confirmed) {
+                                    target.currentAnswer = matchedValue
+                                }
                             }
                         )
                     }
@@ -93,8 +114,13 @@ fun DragDropQuizScreen(
             ) {
                 if (currentPage > 0) {
                     OutlinedButton(
-                        onClick = { currentPage-- },
-                        modifier = Modifier.weight(1f).height(56.dp)
+                        onClick = {
+                            if (!confirmed) {
+                                currentPage--
+                            }
+                        },
+                        modifier = Modifier.weight(1f).height(56.dp),
+                        enabled = !confirmed
                     ) {
                         Text("Previous")
                     }
@@ -103,17 +129,33 @@ fun DragDropQuizScreen(
                 val isLastPage = (currentPage + 1) * pageSize >= questions.size
                 Button(
                     onClick = {
-                        if (isLastPage) {
-                            finalScore = allDropTargets.count { it.currentAnswer == it.correctAnswer }
-                            isFinished = true
+                        if (!confirmed) {
+                            confirmed = true
                         } else {
-                            currentPage++
+                            if (isLastPage) {
+                                finalScore = allDropTargets.count {
+                                    feedbackControl.isDragDropAnswerCorrect(
+                                        it.currentAnswer,
+                                        it.correctAnswer
+                                    )
+                                }
+                                isFinished = true
+                            } else {
+                                currentPage++
+                                confirmed = false
+                            }
                         }
                     },
                     modifier = Modifier.weight(1f).height(56.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = primaryTeal)
                 ) {
-                    Text(if (isLastPage) "Finish Quiz" else "Next")
+                    Text(
+                        when {
+                            !confirmed -> "Confirm"
+                            isLastPage -> "Finish Quiz"
+                            else -> "Next"
+                        }
+                    )
                 }
             }
         }

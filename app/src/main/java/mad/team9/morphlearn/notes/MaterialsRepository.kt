@@ -13,24 +13,38 @@ class MaterialsRepository(
 
 
     override suspend fun getAllMaterials(): List<Material> {
-        val snapshot = db.collection("Users")
-            .document(uid())
+        val userDoc = db.collection("Users").document(uid())
+
+        val materialsSnapshot = userDoc
             .collection("Materials")
             .get()
             .await()
 
-        return snapshot.documents.map { doc ->
+        val subjectsSnapshot = userDoc
+            .collection("Subjects")
+            .get()
+            .await()
+
+        val subjectMap = subjectsSnapshot.documents.associate { doc ->
+            val materialId = doc.getString("materialId") ?: ""
+            val subjectName = doc.getString("name") ?: "Others"
+            materialId to subjectName
+        }
+
+        return materialsSnapshot.documents.map { doc ->
             Material(
                 id = doc.id,
                 title = doc.getString("title") ?: "",
-                generatedNotes = doc.getString("generatedNotes") ?: ""
+                generatedNotes = doc.getString("generatedNotes") ?: "",
+                subjectName = subjectMap[doc.id] ?: "Others"
             )
         }
     }
 
     suspend fun getMaterial(materialId: String): Material? {
-        val doc = db.collection("Users")
-            .document(uid())
+        val userDoc = db.collection("Users").document(uid())
+
+        val doc = userDoc
             .collection("Materials")
             .document(materialId)
             .get()
@@ -38,10 +52,20 @@ class MaterialsRepository(
 
         if (!doc.exists()) return null
 
+        val subjectSnapshot = userDoc
+            .collection("Subjects")
+            .whereEqualTo("materialId", materialId)
+            .limit(1)
+            .get()
+            .await()
+
+        val subjectName = subjectSnapshot.documents.firstOrNull()?.getString("name") ?: "Others"
+
         return Material(
             id = doc.id,
             title = doc.getString("title") ?: "",
-            generatedNotes = doc.getString("generatedNotes") ?: ""
+            generatedNotes = doc.getString("generatedNotes") ?: "",
+            subjectName = subjectName
         )
     }
 
@@ -74,5 +98,14 @@ class MaterialsRepository(
         if (snapshot.isEmpty) return false
 
         return true
+    }
+
+    override suspend fun getLearningStyle(): String? {
+        val userDoc = db.collection("Users")
+            .document(uid())
+            .get()
+            .await()
+
+        return userDoc.getString("learningStyle")
     }
 }
