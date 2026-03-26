@@ -110,6 +110,9 @@ class NotesTest {
             if (shouldThrow) throw Exception(exceptionMessage)
             return quizId
         }
+        override suspend fun getLearningStyle(): String? {
+            return null
+        }
     }
 }
 
