@@ -3,6 +3,7 @@ package mad.team9.morphlearn.stylebasedquiz.visual
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -13,12 +14,20 @@ import mad.team9.morphlearn.stylebasedquiz.QuizFetchRepository
 import mad.team9.morphlearn.stylebasedquiz.QuizResult
 import mad.team9.morphlearn.stylebasedquiz.QuizResultRepository
 
-class FlashcardsViewModel : ViewModel() {
-    private val fetchRepo = QuizFetchRepository()
-    private val resultRepo = QuizResultRepository()
-    
-    val cards = mutableStateListOf<Flashcard>()
-    
+// Local wrapper to track original index without modifying the global Flashcard class
+data class FlashcardWithIndex(val card: Flashcard, val originalIndex: Int)
+
+class FlashcardsViewModel(
+    private val fetchRepo: QuizFetchRepository = QuizFetchRepository(),
+    private val resultRepo: QuizResultRepository = QuizResultRepository()
+) : ViewModel() {
+
+    // Tracks cards that haven't been answered correctly/wrong yet
+    val activeCards = mutableStateListOf<FlashcardWithIndex>()
+
+    // Tracks results: originalIndex -> (1 for correct, 0 for wrong)
+    val userAnswersMap = mutableStateMapOf<Int, Int>()
+
     var currentCardIndex by mutableIntStateOf(0)
     var isAnswerRevealed by mutableStateOf(false)
     var correctCount by mutableIntStateOf(0)
@@ -27,14 +36,14 @@ class FlashcardsViewModel : ViewModel() {
     var errorMessage by mutableStateOf<String?>(null)
 
     private var currentMaterialId: String = ""
+    private var originalTotalCount: Int = 0
 
-    val totalCards: Int get() = cards.size
     val currentCard: Flashcard?
-        get() = if (currentCardIndex < cards.size) cards[currentCardIndex] else null
+        get() = activeCards.getOrNull(currentCardIndex)?.card
 
     fun loadQuizData(materialId: String) {
-        if (currentMaterialId == materialId && cards.isNotEmpty()) return
-        
+        if (currentMaterialId == materialId && (activeCards.isNotEmpty() || userAnswersMap.isNotEmpty())) return
+
         currentMaterialId = materialId
         viewModelScope.launch {
             isLoading = true
@@ -43,19 +52,24 @@ class FlashcardsViewModel : ViewModel() {
                 val quizId = fetchRepo.getQuizIdByMaterialId(materialId)
                 if (quizId != null) {
                     val quizQuestions = fetchRepo.getQuizQuestions(quizId)
-                    val mappedCards = quizQuestions.mapNotNull { q ->
+                    val mappedCards = quizQuestions.mapIndexedNotNull { index, q ->
                         if (q.correctIndex in q.options.indices) {
-                            Flashcard(qn = q.question, ans = q.options[q.correctIndex])
+                            FlashcardWithIndex(
+                                card = Flashcard(qn = q.question, ans = q.options[q.correctIndex]),
+                                originalIndex = index
+                            )
                         } else {
                             null
                         }
                     }
-                    
+
                     if (mappedCards.isEmpty()) {
                         errorMessage = "This quiz has no valid questions."
                     } else {
-                        cards.clear()
-                        cards.addAll(mappedCards.shuffled())
+                        originalTotalCount = mappedCards.size
+                        activeCards.clear()
+                        userAnswersMap.clear()
+                        activeCards.addAll(mappedCards.shuffled())
                         resetState()
                     }
                 } else {
@@ -74,34 +88,54 @@ class FlashcardsViewModel : ViewModel() {
         isAnswerRevealed = false
         correctCount = 0
         isFinished = false
+        userAnswersMap.clear()
     }
 
     fun toggleAnswer() {
         isAnswerRevealed = !isAnswerRevealed
     }
 
+    /**
+     * Called when user marks a card as Correct or Wrong.
+     * Removes the card from the active deck and records the result by its original index.
+     */
     fun onAnswered(isCorrect: Boolean) {
+        val currentWrapper = activeCards.getOrNull(currentCardIndex) ?: return
+
+        // Record the answer: 1 for correct, 0 for wrong, indexed by original question order
+        userAnswersMap[currentWrapper.originalIndex] = if (isCorrect) 1 else 0
+
         if (isCorrect) {
             correctCount++
         }
-        moveToNext()
-    }
 
-    fun skipCard() {
-        if (currentCardIndex < cards.size) {
-            val card = cards.removeAt(currentCardIndex)
-            cards.add(card)
+        // Remove from current session queue
+        activeCards.removeAt(currentCardIndex)
+
+        if (activeCards.isEmpty()) {
+            isFinished = true
+            saveAttempt()
+        } else {
+            // After removal, currentCardIndex now points to what was the next card.
+            // If we removed the last item in the list, wrap back to the start.
+            if (currentCardIndex >= activeCards.size) {
+                currentCardIndex = 0
+            }
             isAnswerRevealed = false
         }
     }
 
-    private fun moveToNext() {
-        if (currentCardIndex < cards.size - 1) {
-            currentCardIndex++
+    /**
+     * Moves the current card to the back of the deck while preserving its original index.
+     */
+    fun skipCard() {
+        if (activeCards.size > 1) {
+            val card = activeCards.removeAt(currentCardIndex)
+            activeCards.add(card)
             isAnswerRevealed = false
-        } else if (cards.isNotEmpty()) {
-            isFinished = true
-            saveAttempt()
+            // currentCardIndex stays the same, so the UI shows the card that was immediately behind.
+        } else if (activeCards.size == 1) {
+            isAnswerRevealed = false
         }
     }
 
@@ -110,22 +144,27 @@ class FlashcardsViewModel : ViewModel() {
         viewModelScope.launch {
             val quizId = fetchRepo.getQuizIdByMaterialId(currentMaterialId) ?: ""
             val attemptNumber = resultRepo.getNextAttemptNumber(userId, currentMaterialId)
-            
+
+            // Sequential array of answers (0 or 1) ordered by original index
+            val answersList = (0 until originalTotalCount).map { userAnswersMap[it] ?: 0 }
+
             val result = QuizResult(
                 userId = userId,
                 quizId = quizId,
                 materialId = currentMaterialId,
                 score = correctCount,
-                totalQuestions = totalCards,
-                userAnswers = emptyList(),
+                totalQuestions = originalTotalCount,
+                userAnswers = answersList,
                 attemptNumber = attemptNumber
             )
-            resultRepo.saveQuizAttempt(result, "Flashcards")
+            // Saves to Users/{userId}/QuizAttempts/{materialId}
+            resultRepo.saveQuizAttempt(result, "Visual - Flashcards")
         }
     }
 
     fun restart() {
-        resetState()
-        cards.shuffle()
+        val mid = currentMaterialId
+        currentMaterialId = ""
+        loadQuizData(mid)
     }
 }
