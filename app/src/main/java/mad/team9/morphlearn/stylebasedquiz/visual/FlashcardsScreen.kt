@@ -362,7 +362,7 @@ fun FlashcardsResultScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = MorphTeal),
                     shape = RoundedCornerShape(16.dp)
                 ) {
-                    Text("Finish & Go Home", fontWeight = FontWeight.Bold)
+                    Text("Back to Topics", fontWeight = FontWeight.Bold)
                 }
             }
         }
