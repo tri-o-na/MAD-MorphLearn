@@ -24,6 +24,7 @@ data class QuizPlayState(
     // correctness for current question after confirm
     val lastAnswerCorrect: Boolean? = null,
 
+
     // Final result
     val finalScore: Int? = null,
     val finished: Boolean = false
@@ -34,6 +35,7 @@ class QuizPlayViewModel(
     private val resultRepo: QuizResultRepository = QuizResultRepository()
 ) : ViewModel() {
 
+    private val feedbackControl = QuizAnswerFeedbackControl()
     private val _state = MutableStateFlow(QuizPlayState())
     val state: StateFlow<QuizPlayState> = _state
 
@@ -83,7 +85,7 @@ class QuizPlayViewModel(
         val selected = s.selectedAnswers.getOrNull(s.index) ?: -1
         if (selected == -1) return
 
-        val correct = (selected == q.correctIndex)
+        val correct = feedbackControl.isMcqAnswerCorrect(selected, q.correctIndex)
         _state.value = s.copy(confirmed = true, lastAnswerCorrect = correct)
     }
 
@@ -98,7 +100,10 @@ class QuizPlayViewModel(
             viewModelScope.launch {
                 val answers = s.selectedAnswers
                 val score = s.questions.indices.count { i ->
-                    answers.getOrNull(i) == s.questions[i].correctIndex
+                    feedbackControl.isMcqAnswerCorrect(
+                        answers.getOrElse(i) { -1 },
+                        s.questions[i].correctIndex
+                    )
                 }
 
                 val uid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
@@ -124,6 +129,33 @@ class QuizPlayViewModel(
                 index = next,
                 confirmed = false,
                 lastAnswerCorrect = null
+            )
+        }
+    }
+
+    fun submitFinalScore(score: Int, topic: String) {
+        val s = _state.value
+
+        viewModelScope.launch {
+            val uid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+
+            val nextAttempt = resultRepo.getNextAttemptNumber(uid, s.materialId)
+
+            val result = QuizResult(
+                userId = uid,
+                quizId = s.quizId,
+                materialId = s.materialId,
+                score = score,
+                totalQuestions = s.questions.size,
+                userAnswers = emptyList(),
+                attemptNumber = nextAttempt
+            )
+
+            resultRepo.saveQuizAttempt(result, topic)
+
+            _state.value = s.copy(
+                finished = true,
+                finalScore = score
             )
         }
     }
