@@ -33,19 +33,14 @@ class AINotesRepository(
             require(questionText.isNotBlank()){"Generated question text missing"}
 
             val optionsJson = obj.optJSONArray("options")
+                ?: throw IllegalArgumentException("Generated question options missing")
 
-            if (optionsJson != null) {
-                require(optionsJson.length() == 4){
-                    "Each question must have 4 options"
-                }
-            } else throw IllegalArgumentException("Generated question options missing")
-
-            val options = List(4){
+            val options = List(optionsJson.length()){
                 index -> optionsJson.getString(index)
             }
 
             val correctIndex = obj.optInt("correctIndex", -1)
-            require(correctIndex in 0..3){
+            require(correctIndex in 0..<options.size){
                 "Correct index invalid value"
             }
 
@@ -78,19 +73,14 @@ class AINotesRepository(
             require(questionText.isNotBlank()){"Generated question text missing"}
 
             val optionsJson = obj.optJSONArray("options")
+                ?: throw IllegalArgumentException("Generated question options missing")
 
-            if (optionsJson != null) {
-                require(optionsJson.length() == 4){
-                    "Each question must have 4 options"
-                }
-            } else throw IllegalArgumentException("Generated question options missing")
-
-            val options = List(4){
+            val options = List(optionsJson.length()){
                     index -> optionsJson.getString(index)
             }
 
             val correctIndex = obj.optInt("correctIndex", -1)
-            require(correctIndex in 0..3){
+            require(correctIndex in 0..<options.size){
                 "Correct index invalid value"
             }
 

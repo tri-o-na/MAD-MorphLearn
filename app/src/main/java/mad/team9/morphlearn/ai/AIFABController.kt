@@ -55,7 +55,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
+import mad.team9.morphlearn.login.FirebaseAuthManager
 import org.json.JSONObject
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -116,7 +118,7 @@ fun AIFloatingActionButton(
                                val subjectId = aiNotesViewModel.getOrCreateSubject(subject)
 
                                // Get AI response
-                               val responseJson = uploadPDFToAI(context,selectedUri!!)
+                               val responseJson = uploadPDFToAI(context,selectedUri!!, FirebaseAuthManager.getLearningStyle())
 
                                // Inject Subject id into response json
                                val editResponse = JSONObject(responseJson).apply {
