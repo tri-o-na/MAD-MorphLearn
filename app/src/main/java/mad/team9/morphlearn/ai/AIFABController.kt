@@ -34,6 +34,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -59,6 +60,8 @@ import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import mad.team9.morphlearn.login.FirebaseAuthManager
 import org.json.JSONObject
+import mad.team9.morphlearn.ui.theme.*
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,7 +84,9 @@ fun AIFloatingActionButton(
         onClick = {
             showUploadModal = true
             showConfigureModal = false
-        }
+        },
+        containerColor = MorphTeal,
+        contentColor = Color.White
     ) {
         Icon(
             imageVector = Icons.Default.Add,
@@ -201,7 +206,7 @@ fun AIUploadPDFModal(
             enabled = selectedUri != null,
             modifier = Modifier.fillMaxWidth().height(56.dp),
             shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2D5D5D)) // teal color
+            colors = ButtonDefaults.buttonColors(containerColor = MorphTeal) // teal color
         ) {
             Text("Continue", color = Color.White, fontWeight = FontWeight.Bold)
         }
@@ -237,9 +242,9 @@ fun AIConfigureModal(
         }
 
         TextButton(onClick = onBack, contentPadding = PaddingValues(0.dp)) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, modifier = Modifier.size(18.dp))
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, modifier = Modifier.size(18.dp), tint = MorphTeal)
             Spacer(Modifier.width(4.dp))
-            Text("Back", color = Color(0xFF2D5D5D))
+            Text("Back", color = MorphTeal)
         }
 
         Surface(
@@ -265,7 +270,14 @@ fun AIConfigureModal(
             placeholder = {Text("Enter Subject Name")},
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
-            singleLine = true
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color.Black,
+                unfocusedTextColor = Color.Black,
+                focusedBorderColor = MorphTeal,
+                unfocusedBorderColor = MorphTeal,
+                cursorColor = MorphTeal
+            )
         )
 
         Spacer(Modifier.height(16.dp))
@@ -278,7 +290,14 @@ fun AIConfigureModal(
             placeholder = {Text("Enter Note Title")},
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
-            singleLine = true
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color.Black,
+                unfocusedTextColor = Color.Black,
+                focusedBorderColor = MorphTeal,
+                unfocusedBorderColor = MorphTeal,
+                cursorColor = MorphTeal
+            )
         )
 
         Spacer(Modifier.height(32.dp))
@@ -289,7 +308,7 @@ fun AIConfigureModal(
             modifier = Modifier.fillMaxWidth().height(56.dp),
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF2D5D5D),
+                containerColor = MorphTeal,
                 disabledContentColor = Color.LightGray
             )
         ) {

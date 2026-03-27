@@ -205,6 +205,7 @@ fun questionStyleType(learnerType: String): String{
             - RULE: Ensure the questions does not starts with "which of the following" type of question.
             - RULE: The 'options' array must contain ONLY 1 string (the correct answer).
             - RULE: Set 'correctIndex' to 0.
+            - RULE: Avoid using special characters in the answer.
         """.trimIndent()
         else -> "Standard MCQ with exactly 4 options"
     }
