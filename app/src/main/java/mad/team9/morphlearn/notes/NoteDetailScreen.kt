@@ -32,7 +32,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,9 +40,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
 import mad.team9.morphlearn.audio.rememberTextToSpeechController
-import mad.team9.morphlearn.stylebasedquiz.QuizFetchRepository
 
 @Composable
 fun NoteDetailsScreen(
@@ -182,18 +179,13 @@ fun NoteDetailsScreen(
         Spacer(Modifier.height(12.dp))
 
         Row {
-            val scope = rememberCoroutineScope()
-            val quizRepo = remember { QuizFetchRepository() }
-
             Button(
                 onClick = {
-                    scope.launch {
-                        if (quizId != null) onTakeQuiz(quizId!!, material.title)
-                        else android.util.Log.e(
-                            "NOTE_DETAILS",
-                            "No quiz found for materialId=$materialId"
-                        )
-                    }
+                    if (quizId != null) onTakeQuiz(quizId!!, material.title)
+                    else Log.e(
+                        "NOTE_DETAILS",
+                        "No quiz found for materialId=$materialId"
+                    )
                 },
                 modifier = Modifier
                     .fillMaxWidth()

@@ -91,7 +91,7 @@ fun QuizPlayScreen(
                         state = state,
                         topic = topic,
                         vm = vm,
-                        // TEMP: enable TTS for KINESTHETIC while testing audio flow
+
                         enableTts = learningStyle?.trim()?.uppercase() in setOf("AUDITORY")
                     )
                 }
