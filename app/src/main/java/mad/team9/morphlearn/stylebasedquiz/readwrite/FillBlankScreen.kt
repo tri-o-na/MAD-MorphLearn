@@ -97,7 +97,7 @@ fun FillBlankContent(
                 Text(errorMessage, color = Color.Red)
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(onClick = onBackToLibrary, colors = ButtonDefaults.buttonColors(containerColor = MorphTeal)) {
-                    Text("Go Back")
+                    Text("Go Back", color = Color.White)
                 }
             }
         }
@@ -201,13 +201,16 @@ fun FillBlankContent(
                                 value = userAnswer,
                                 onValueChange = { if (!isAnswered) onUserAnswerChange(it) },
                                 modifier = Modifier.fillMaxWidth(),
-                                placeholder = { Text("Type your answer here...") },
+                                placeholder = { Text("Type your answer here...", color = Color.Gray) },
                                 shape = RoundedCornerShape(12.dp),
                                 singleLine = true,
                                 enabled = !isAnswered,
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = MorphTeal,
-                                    unfocusedBorderColor = Color.LightGray
+                                    unfocusedBorderColor = Color.LightGray,
+                                    focusedTextColor = TextDark,
+                                    unfocusedTextColor = TextDark,
+                                    disabledTextColor = TextDark
                                 )
                             )
 
@@ -258,7 +261,8 @@ fun FillBlankContent(
                         .fillMaxWidth()
                         .height(56.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isAnswered) MorphTeal else MorphPurple
+                        containerColor = if (isAnswered) MorphTeal else MorphPurple,
+                        contentColor = Color.White
                     ),
                     shape = RoundedCornerShape(12.dp),
                     enabled = userAnswer.isNotBlank()
@@ -266,7 +270,8 @@ fun FillBlankContent(
                     Text(
                         text = if (isAnswered) "Next Question" else "Submit Answer",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
+                        fontSize = 16.sp,
+                        color = Color.White
                     )
                 }
             }
@@ -321,7 +326,8 @@ fun FillBlankResultScreen(
                     Text(
                         text = "$percentage%",
                         style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = TextDark
                     )
                 }
 
@@ -341,7 +347,7 @@ fun FillBlankResultScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = MorphTeal),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Try Again")
+                    Text("Try Again", color = Color.White)
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
