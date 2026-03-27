@@ -46,7 +46,7 @@ fun FlashcardsScreen(
     if (viewModel.isFinished) {
         FlashcardsResultScreen(
             correct = viewModel.correctCount,
-            total = viewModel.totalCards,
+            total = viewModel.userAnswersMap.size,
             onBackToHome = onBackToHome
         )
     } else if (viewModel.isLoading) {
@@ -56,7 +56,8 @@ fun FlashcardsScreen(
     } else if (viewModel.errorMessage != null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(viewModel.errorMessage!!, color = Color.Red)
+                Text(viewModel.errorMessage!!, color = Color.Red, textAlign = TextAlign.Center)
+                Spacer(Modifier.height(16.dp))
                 Button(onClick = onBackToLibrary, colors = ButtonDefaults.buttonColors(containerColor = MorphTeal)) {
                     Text("Go Back")
                 }
@@ -89,8 +90,11 @@ fun FlashcardsScreen(
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Progress Bar
-                val progress = if (viewModel.totalCards > 0) (viewModel.currentCardIndex + 1).toFloat() / viewModel.totalCards else 0f
+                // Progress Bar: Percentage of questions answered
+                val answeredCount = viewModel.userAnswersMap.size
+                val totalCount = answeredCount + viewModel.activeCards.size
+                val progress = if (totalCount > 0) answeredCount.toFloat() / totalCount else 0f
+                
                 LinearProgressIndicator(
                     progress = { progress },
                     modifier = Modifier
@@ -102,7 +106,7 @@ fun FlashcardsScreen(
                 )
                 
                 Text(
-                    text = "Question ${viewModel.currentCardIndex + 1} of ${viewModel.totalCards}",
+                    text = "${viewModel.activeCards.size} cards remaining",
                     style = MaterialTheme.typography.labelLarge,
                     color = Color.Gray,
                     modifier = Modifier.padding(top = 12.dp)
@@ -124,7 +128,7 @@ fun FlashcardsScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Action Buttons (Correct / Wrong)
+                // Action Buttons
                 Box(modifier = Modifier.height(80.dp)) {
                     androidx.compose.animation.AnimatedVisibility(
                         visible = viewModel.isAnswerRevealed,
@@ -194,7 +198,6 @@ fun FlashcardItem(
             .fillMaxWidth()
             .height(400.dp)
     ) {
-        // Main Flipping Card
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -208,7 +211,6 @@ fun FlashcardItem(
                 .padding(24.dp)
         ) {
             if (rotation <= 90f) {
-                // Front side: Question
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -236,7 +238,6 @@ fun FlashcardItem(
                     )
                 }
             } else {
-                // Back side: Answer
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -268,7 +269,6 @@ fun FlashcardItem(
             }
         }
 
-        // Skip Button - outside the flipping box so it stays fixed in the top right
         TextButton(
             onClick = onSkip,
             modifier = Modifier
@@ -362,7 +362,7 @@ fun FlashcardsResultScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = MorphTeal),
                     shape = RoundedCornerShape(16.dp)
                 ) {
-                    Text("Back to Home", fontWeight = FontWeight.Bold)
+                    Text("Finish & Go Home", fontWeight = FontWeight.Bold)
                 }
             }
         }
