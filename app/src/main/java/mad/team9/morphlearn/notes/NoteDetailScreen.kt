@@ -1,6 +1,7 @@
 package mad.team9.morphlearn.notes
 
 import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -41,6 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import mad.team9.morphlearn.audio.rememberTextToSpeechController
+import mad.team9.morphlearn.ui.theme.*
 
 @Composable
 fun NoteDetailsScreen(
@@ -61,7 +64,6 @@ fun NoteDetailsScreen(
     var isSpeaking by remember { mutableStateOf(false) }
     var hasStartedSpeaking by remember { mutableStateOf(false) }
 
-    val primaryTeal = Color(0xFF006064)
     val isAuditoryLearner = learningStyle?.trim()?.uppercase() == "AUDITORY"
 
     LaunchedEffect(Unit) {
@@ -78,11 +80,15 @@ fun NoteDetailsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(BackgroundGray)
             .padding(16.dp)
     ) {
         Button(
             onClick = onBack,
-            colors = ButtonDefaults.buttonColors(containerColor = primaryTeal)
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MorphTeal,
+                contentColor = Color.White
+            )
         ) {
             Text("Back")
         }
@@ -94,7 +100,11 @@ fun NoteDetailsScreen(
         }
 
         if (material == null) {
-            Text("Loading topic.", style = MaterialTheme.typography.bodyLarge)
+            Text(
+                "Loading topic.",
+                style = MaterialTheme.typography.bodyLarge,
+                color = TextDark
+            )
             return
         }
 
@@ -109,6 +119,7 @@ fun NoteDetailsScreen(
                 text = material.title.ifBlank { "Untitled Topic" },
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold,
+                color = TextDark,
                 modifier = Modifier.weight(1f)
             )
 
@@ -128,7 +139,7 @@ fun NoteDetailsScreen(
                         .size(44.dp)
                         .border(
                             width = 1.5.dp,
-                            color = primaryTeal,
+                            color = MorphTeal,
                             shape = CircleShape
                         )
                 ) {
@@ -143,7 +154,7 @@ fun NoteDetailsScreen(
                             hasStartedSpeaking -> "Replay notes"
                             else -> "Read notes aloud"
                         },
-                        tint = primaryTeal
+                        tint = MorphTeal
                     )
                 }
             }
@@ -154,7 +165,11 @@ fun NoteDetailsScreen(
         ElevatedCard(
             modifier = Modifier
                 .weight(1f)
-                .fillMaxWidth()
+                .fillMaxWidth(),
+            colors = CardDefaults.elevatedCardColors(
+                containerColor = Color.White,
+                contentColor = TextDark
+            )
         ) {
             Column(
                 modifier = Modifier
@@ -190,7 +205,10 @@ fun NoteDetailsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
-                colors = ButtonDefaults.buttonColors(containerColor = primaryTeal)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MorphTeal,
+                    contentColor = Color.White
+                )
             ) {
                 Text("Take Quiz")
             }
@@ -206,7 +224,10 @@ fun NoteDetailsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = primaryTeal)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MorphTeal,
+                        contentColor = Color.White
+                    )
                 ) {
                     Text("Regenerate Quiz")
                 }
@@ -243,6 +264,7 @@ private fun NotesFormattedText(
                         text = line,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
+                        color = TextDark,
                         modifier = Modifier.clickable { onLineClick(line) }
                     )
                 }
@@ -267,6 +289,7 @@ private fun NotesFormattedText(
                     Text(
                         text = line,
                         style = MaterialTheme.typography.bodyLarge,
+                        color = TextDark,
                         modifier = Modifier.clickable { onLineClick(line) }
                     )
                 }
@@ -288,10 +311,11 @@ private fun BulletLine(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.Top
     ) {
-        Text("•", style = textStyle)
+        Text("•", style = textStyle, color = TextDark)
         Text(
             text = content,
             style = textStyle,
+            color = TextDark,
             modifier = Modifier.weight(1f),
             textAlign = TextAlign.Start
         )
