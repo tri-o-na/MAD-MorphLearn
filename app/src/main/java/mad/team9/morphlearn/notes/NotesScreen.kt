@@ -46,6 +46,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
+import mad.team9.morphlearn.ui.theme.*
 
 private fun getQuizTypeLabel(learningStyle: String?): String {
     return when (learningStyle?.trim()?.uppercase()) {
@@ -73,7 +74,6 @@ fun NotesScreen(
     }
 
     val expandedSubjects = remember { mutableStateMapOf<String, Boolean>() }
-    val primaryTeal = Color(0xFF006064)
     val quizTypeLabel = getQuizTypeLabel(learningStyle)
 
     Scaffold(
@@ -115,9 +115,9 @@ fun NotesScreen(
                             }
                         },
                         colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = primaryTeal,
-                            selectedTextColor = primaryTeal,
-                            indicatorColor = Color(0xFFE0F2F1)
+                            selectedIconColor = MorphTeal,
+                            selectedTextColor = MorphTeal,
+                            indicatorColor = TrackTeal
                         )
                     )
                 }
@@ -127,13 +127,13 @@ fun NotesScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFF8F9FA))
+                .background(BackgroundGray)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(
-                        color = primaryTeal,
+                        color = MorphTeal,
                         shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
                     )
                     .padding(start = 20.dp, top = 24.dp, end = 20.dp, bottom = 22.dp)
@@ -170,7 +170,11 @@ fun NotesScreen(
 
                     ElevatedCard(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(20.dp)
+                        shape = RoundedCornerShape(20.dp),
+                        colors = androidx.compose.material3.CardDefaults.elevatedCardColors(
+                            containerColor = Color.White,
+                            contentColor = TextDark
+                        )
                     ) {
                         Column(
                             modifier = Modifier
@@ -191,13 +195,13 @@ fun NotesScreen(
                                     text = "${group.subjectName} (${group.materials.size})",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF2D3436)
+                                    color = TextDark
                                 )
 
                                 Icon(
                                     imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                                     contentDescription = if (isExpanded) "Collapse" else "Expand",
-                                    tint = primaryTeal
+                                    tint = MorphTeal
                                 )
                             }
 
@@ -215,7 +219,7 @@ fun NotesScreen(
                                             ),
                                         colors = ButtonDefaults.elevatedButtonColors(
                                             containerColor = Color.White,
-                                            contentColor = Color(0xFF2D3436)
+                                            contentColor = TextDark
                                         ),
                                         shape = RoundedCornerShape(16.dp),
                                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
@@ -228,7 +232,7 @@ fun NotesScreen(
                                                 text = material.title.ifBlank { "Untitled Topic" },
                                                 fontWeight = FontWeight.SemiBold,
                                                 fontSize = 15.sp,
-                                                color = Color(0xFF2D3436)
+                                                color = TextDark
                                             )
 
                                             Row(
@@ -238,7 +242,7 @@ fun NotesScreen(
                                                 Row(
                                                     modifier = Modifier
                                                         .background(
-                                                            color = Color(0xFFD7ECEB),
+                                                            color = TrackTeal,
                                                             shape = RoundedCornerShape(50)
                                                         )
                                                         .padding(horizontal = 10.dp, vertical = 4.dp),
@@ -248,7 +252,7 @@ fun NotesScreen(
                                                         text = quizTypeLabel,
                                                         fontSize = 12.sp,
                                                         fontWeight = FontWeight.Medium,
-                                                        color = primaryTeal
+                                                        color = MorphTeal
                                                     )
                                                 }
                                             }

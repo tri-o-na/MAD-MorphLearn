@@ -295,6 +295,9 @@ fun MorphLearnApp(
                                     popUpTo("notes") { inclusive = true }
                                     launchSingleTop = true
                                 }
+                            },
+                            onBackToNotes = {
+                                navController.navigate("notes")
                             }
                         )
                     }
