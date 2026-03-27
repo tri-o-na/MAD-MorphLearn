@@ -26,6 +26,7 @@ import kotlin.math.roundToInt
 fun DraggableAnswer(
     content: String,
     dropTargets: List<DropTargetState>,
+    enabled: Boolean,
     onMatchFound: (DropTargetState, String) -> Unit
 ) {
     var offsetX by remember { mutableStateOf(0f) }
@@ -44,39 +45,48 @@ fun DraggableAnswer(
                 }
             }
             .offset { IntOffset(offsetX.roundToInt(), offsetY.roundToInt()) }
-            .pointerInput(Unit) {
-                detectDragGestures(
-                    onDragStart = { isDragging = true },
-                    onDragEnd = {
-                        isDragging = false
-                        val centerX = startPositionInWindow.x + offsetX + (itemSize.width / 2f)
-                        val centerY = startPositionInWindow.y + offsetY + (itemSize.height / 2f)
-                        val centerPoint = Offset(centerX, centerY)
+            .pointerInput(enabled) {
+                if (enabled) {
+                    detectDragGestures(
+                        onDragStart = { isDragging = true },
+                        onDragEnd = {
+                            isDragging = false
+                            val centerX = startPositionInWindow.x + offsetX + (itemSize.width / 2f)
+                            val centerY = startPositionInWindow.y + offsetY + (itemSize.height / 2f)
+                            val centerPoint = Offset(centerX, centerY)
 
-                        val target = dropTargets.find { it.screenBounds.contains(centerPoint) }
-                        
-                        if (target != null) {
-                            onMatchFound(target, content)
+                            val target = dropTargets.find { it.screenBounds.contains(centerPoint) }
+
+                            if (target != null) {
+                                onMatchFound(target, content)
+                            }
+                            offsetX = 0f
+                            offsetY = 0f
+                        },
+                        onDragCancel = {
+                            isDragging = false
+                            offsetX = 0f
+                            offsetY = 0f
+                        },
+                        onDrag = { change, dragAmount ->
+                            change.consume()
+                            offsetX += dragAmount.x
+                            offsetY += dragAmount.y
                         }
-                        offsetX = 0f
-                        offsetY = 0f
-                    },
-                    onDragCancel = {
-                        isDragging = false
-                        offsetX = 0f
-                        offsetY = 0f
-                    },
-                    onDrag = { change, dragAmount ->
-                        change.consume()
-                        offsetX += dragAmount.x
-                        offsetY += dragAmount.y
-                    }
-                )
+                    )
+                }
             }
             .padding(4.dp),
         shape = RoundedCornerShape(12.dp),
         color = Color.White,
-        border = BorderStroke(1.dp, if (isDragging) Color(0xFF006064) else Color.LightGray),
+        border = BorderStroke(
+            1.dp,
+            when {
+                !enabled -> Color.Gray
+                isDragging -> Color(0xFF006064)
+                else -> Color.LightGray
+            }
+        ),
         shadowElevation = if (isDragging) 8.dp else 2.dp
     ) {
         Text(
@@ -91,7 +101,10 @@ fun DraggableAnswer(
 }
 
 @Composable
-fun QuestionSlot(state: DropTargetState) {
+fun QuestionSlot(state: DropTargetState,
+                 enabled: Boolean,
+                 backgroundColor: Color,
+                 borderColor: Color) {
     val isFilled = state.currentAnswer != null
     val primaryTeal = Color(0xFF006064)
 
@@ -102,13 +115,20 @@ fun QuestionSlot(state: DropTargetState) {
             .onGloballyPositioned { layoutCoordinates ->
                 state.screenBounds = layoutCoordinates.boundsInWindow()
             }
-            .then(
-                if (isFilled) Modifier.border(2.dp, primaryTeal, RoundedCornerShape(16.dp)) 
-                else Modifier
+            .border(
+                width = if (enabled) {
+                    if (isFilled) 2.dp else 1.dp
+                } else 2.dp,
+                color = if (enabled && isFilled) primaryTeal else borderColor,
+                shape = RoundedCornerShape(16.dp)
             ),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.elevatedCardColors(
-            containerColor = if (isFilled) Color(0xFFE0F2F1) else Color.White
+            containerColor = if (enabled) {
+                if (isFilled) Color(0xFFE0F2F1) else Color.White
+            } else {
+                backgroundColor
+            }
         )
     ) {
         Column(
@@ -120,7 +140,12 @@ fun QuestionSlot(state: DropTargetState) {
             Text(
                 text = state.questionText, 
                 style = MaterialTheme.typography.bodyMedium,
-                color = if (isFilled) primaryTeal else Color.Unspecified
+                color = when {
+                    !enabled && borderColor == Color(0xFF2E7D32) -> Color(0xFF2E7D32)
+                    !enabled && borderColor == Color(0xFFC62828) -> Color(0xFFC62828)
+                    isFilled -> primaryTeal
+                    else -> Color.Unspecified
+                }
             )
             
             Box(
@@ -128,12 +153,12 @@ fun QuestionSlot(state: DropTargetState) {
                     .fillMaxWidth()
                     .heightIn(min = 48.dp)
                     .background(
-                        color = if (isFilled) Color.White else Color(0xFFF1F3F4), 
+                        color = if (!enabled) backgroundColor else if (isFilled) Color.White else Color(0xFFF1F3F4),
                         shape = RoundedCornerShape(8.dp)
                     )
                     .border(
-                        width = 1.dp, 
-                        color = if (isFilled) primaryTeal else Color.LightGray, 
+                        width = 1.dp,
+                        color = if (!enabled) borderColor else if (isFilled) primaryTeal else Color.LightGray,
                         shape = RoundedCornerShape(8.dp)
                     )
                     .padding(12.dp),
@@ -142,7 +167,12 @@ fun QuestionSlot(state: DropTargetState) {
                 Text(
                     text = state.currentAnswer ?: "Drag answer here",
                     style = MaterialTheme.typography.bodySmall,
-                    color = if (isFilled) primaryTeal else Color.Gray,
+                    color = when {
+                        !enabled && borderColor == Color(0xFF2E7D32) -> Color(0xFF2E7D32)
+                        !enabled && borderColor == Color(0xFFC62828) -> Color(0xFFC62828)
+                        isFilled -> primaryTeal
+                        else -> Color.Gray
+                    },
                     fontWeight = if (isFilled) FontWeight.Bold else FontWeight.Normal,
                     textAlign = TextAlign.Center
                 )
