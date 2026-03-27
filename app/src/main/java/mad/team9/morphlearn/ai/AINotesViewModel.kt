@@ -10,6 +10,7 @@ import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import mad.team9.morphlearn.login.FirebaseAuthManager
 import org.json.JSONObject
 
 sealed class AINoteState{
@@ -77,7 +78,9 @@ class AINotesViewModel(private val repository: AINotesRepository): ViewModel() {
                 val weakQuestions = repository.getWrongQuestions(userId,materialId)
                 val notes = repository.getNotes(userId,materialId)
 
-                val newQuizJson = generateNewQuiz(weakQuestions, notes)
+                val learningStyle = FirebaseAuthManager.getLearningStyle()
+
+                val newQuizJson = generateNewQuiz(weakQuestions, notes, learningStyle)
 
                 // Inject material id  into newQuiz json
                 val editNewQuizJson = JSONObject(newQuizJson).apply {

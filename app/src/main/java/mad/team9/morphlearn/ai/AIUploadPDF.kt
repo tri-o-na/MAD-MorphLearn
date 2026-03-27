@@ -17,9 +17,12 @@ import java.util.concurrent.TimeUnit
 suspend fun uploadPDFToAI(
     context: Context,
     uri: Uri,
+    learnerType: String
 ): String = withContext(Dispatchers.IO){
     val apiKey = BuildConfig.GEMINI_API_KEY
     val aiModel = "gemini-2.5-flash-lite"
+
+    val userQuestionStyle = questionStyleType(learnerType)
 
     val inputStream = context.contentResolver.openInputStream(uri)
     val pdfBytes = inputStream!!.readBytes()
@@ -40,11 +43,14 @@ suspend fun uploadPDFToAI(
                                 "questions": [
                                     {
                                         "question": "<question text>",
-                                        "options": ["option1", "option2", "option3", "option4"],
+                                        "options": [<array of strings based on the style rules>],
                                         "correctIndex": <number>
                                     }
                                 ]
                             }
+                            
+                           This is the type of question you should generate:
+                           $userQuestionStyle 
                             
                            Rules:
                            1. Do NOT include markdown
@@ -52,8 +58,7 @@ suspend fun uploadPDFToAI(
                            3. Do Not wrap the JSON in backticks
                            4. Return ONLY the JSON object
                            5. Do NOT add or modify the JSON keys
-                           6. Ensure options array always has 4 items
-                           7. Ensure correctIndex must match one option index
+                           6. Ensure correctIndex must match one option index
                         """)
                     })
 
@@ -92,9 +97,11 @@ suspend fun uploadPDFToAI(
         .getString("text")
 }
 
-suspend fun generateNewQuiz(weakQuestions: List<String>, notes: String): String = withContext(Dispatchers.IO) {
+suspend fun generateNewQuiz(weakQuestions: List<String>, notes: String, learnerType: String): String = withContext(Dispatchers.IO) {
     val apiKey = BuildConfig.GEMINI_API_KEY
     val aiModel = "gemini-2.5-flash-lite"
+
+    val userQuestionStyle = questionStyleType(learnerType)
 
     val userWeaknessContext =
         "User had attempted a previous quiz based on the same notes but had gotten the following wrong questions: ${
@@ -113,11 +120,14 @@ suspend fun generateNewQuiz(weakQuestions: List<String>, notes: String): String 
             "questions": [
                 {
                     "question": "<question text>",
-                    "options": ["option1", "option2", "option3", "option4"],
+                    "options": [<array of strings based on the style rules>],
                     "correctIndex": <number>
                 }
             ]
         }
+        
+        This is the type of question you should generate:
+        $userQuestionStyle
         
         Rules:
         1. Do NOT include markdown
@@ -125,8 +135,9 @@ suspend fun generateNewQuiz(weakQuestions: List<String>, notes: String): String 
         3. Do Not wrap the JSON in backticks
         4. Return ONLY the JSON object
         5. Do NOT add or modify the JSON keys
-        6. Ensure options array always has 4 items
-        7. Ensure correctIndex must match one option index
+        6. Ensure correctIndex must match one option index
+        
+        
     """.trimIndent()
 
     val requestBodyJson = JSONObject().apply {
@@ -167,4 +178,37 @@ suspend fun generateNewQuiz(weakQuestions: List<String>, notes: String): String 
         .getJSONArray("parts")
         .getJSONObject(0)
         .getString("text")
+}
+
+fun questionStyleType(learnerType: String): String{
+    val questionStyleTypePrompt = when (learnerType) {
+        "KINESTHETIC" -> """
+            - FORMAT: Drag-and-drop/Sequencing.
+            - RULE: The 'options' array MUST contain exactly ONE (1) string. 
+            - RULE: DO NOT provide 4 options. 
+            - RULE: Provide only the correct answer in the options array.
+            - RULE: Set 'correctIndex' to 0.
+        """.trimIndent()
+        "AUDITORY" -> """
+            - FORMAT: MCQ Questions
+            - RULE: Standard MCQ with exactly 4 options.
+        """.trimIndent()
+        "READ_WRITE" -> """
+            - FORMAT: Fill-in-the-blank.
+            - RULE: The 'question' string must contain '____'.
+            - RULE: The 'options' array must contain ONLY 1 string (the correct answer).
+            - RULE: Set 'correctIndex' to 0.
+            - RULE: Avoid using special characters in the answer.
+        """.trimIndent()
+        "VISUAL" -> """
+            - Format: Flash card style question.
+            - RULE: Ensure the questions does not starts with "which of the following" type of question.
+            - RULE: The 'options' array must contain ONLY 1 string (the correct answer).
+            - RULE: Set 'correctIndex' to 0.
+            - RULE: Avoid using special characters in the answer.
+        """.trimIndent()
+        else -> "Standard MCQ with exactly 4 options"
+    }
+
+    return questionStyleTypePrompt
 }
