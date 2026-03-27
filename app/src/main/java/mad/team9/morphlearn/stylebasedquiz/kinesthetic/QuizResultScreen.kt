@@ -20,17 +20,21 @@ fun QuizResultScreen(
     totalQuestions: Int,
     onDone: () -> Unit
 ) {
-    val primaryTeal = Color(0xFF006064)
     val percentage = if (totalQuestions > 0) (score.toDouble() / totalQuestions * 100).toInt() else 0
 
     Box(
-        modifier = Modifier.fillMaxSize().background(Color(0xFFF8F9FA)),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center
     ) {
         ElevatedCard(
             modifier = Modifier.fillMaxWidth(0.85f).padding(24.dp),
             shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.elevatedCardColors(containerColor = Color.White)
+            colors = CardDefaults.elevatedCardColors(
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface
+            )
         ) {
             Column(
                 modifier = Modifier.padding(32.dp),
@@ -39,7 +43,7 @@ fun QuizResultScreen(
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
                     contentDescription = null,
-                    tint = primaryTeal,
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(64.dp)
                 )
 
@@ -48,14 +52,15 @@ fun QuizResultScreen(
                 Text(
                     text = "Quiz Completed!",
                     style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
                     text = "You scored",
-                    color = Color.Gray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyMedium
                 )
 
@@ -63,13 +68,13 @@ fun QuizResultScreen(
                     text = "$score / $totalQuestions",
                     fontSize = 48.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = primaryTeal
+                    color = MaterialTheme.colorScheme.primary
                 )
 
                 Text(
                     text = "$percentage%",
                     style = MaterialTheme.typography.titleLarge,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))
@@ -77,7 +82,10 @@ fun QuizResultScreen(
                 Button(
                     onClick = onDone,
                     modifier = Modifier.fillMaxWidth().height(56.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = primaryTeal),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    ),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text("Back to Topics")

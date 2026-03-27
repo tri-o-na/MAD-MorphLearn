@@ -25,6 +25,8 @@ fun QuizLayoutSelector(
         "KINESTHETIC" -> {
             DragDropQuizScreen(
                 questions = state.questions,
+                topic = topic,
+                onBackClick = onDone,
                 onFinish = onFinish
             )
         }
