@@ -21,10 +21,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import mad.team9.morphlearn.stylebasedquiz.common.QuizResultScreen
 import mad.team9.morphlearn.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,21 +44,21 @@ fun FlashcardsScreen(
     }
 
     if (viewModel.isFinished) {
-        QuizResultScreen(
-            score = viewModel.correctCount,
-            totalQuestions = viewModel.userAnswersMap.size,
-            onDone = onBackToHome
+        FlashcardsResultScreen(
+            correct = viewModel.correctCount,
+            total = viewModel.userAnswersMap.size,
+            onBackToHome = onBackToHome
         )
     } else if (viewModel.isLoading) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            CircularProgressIndicator(color = MorphTeal)
         }
     } else if (viewModel.errorMessage != null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(viewModel.errorMessage!!, color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)
+                Text(viewModel.errorMessage!!, color = Color.Red, textAlign = TextAlign.Center)
                 Spacer(Modifier.height(16.dp))
-                Button(onClick = onBackToLibrary) {
+                Button(onClick = onBackToLibrary, colors = ButtonDefaults.buttonColors(containerColor = MorphTeal)) {
                     Text("Go Back")
                 }
             }
@@ -74,14 +74,14 @@ fun FlashcardsScreen(
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                        navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                        containerColor = MorphTeal,
+                        titleContentColor = Color.White,
+                        navigationIconContentColor = Color.White
                     ),
                     windowInsets = WindowInsets(0, 0, 0, 0)
                 )
             },
-            containerColor = MaterialTheme.colorScheme.background
+            containerColor = BackgroundGray
         ) { padding ->
             Column(
                 modifier = Modifier
@@ -94,21 +94,21 @@ fun FlashcardsScreen(
                 val answeredCount = viewModel.userAnswersMap.size
                 val totalCount = answeredCount + viewModel.activeCards.size
                 val progress = if (totalCount > 0) answeredCount.toFloat() / totalCount else 0f
-                
+
                 LinearProgressIndicator(
                     progress = { progress },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(8.dp)
                         .clip(RoundedCornerShape(4.dp)),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant
+                    color = MorphTeal,
+                    trackColor = Color.LightGray.copy(alpha = 0.3f)
                 )
-                
+
                 Text(
                     text = "${viewModel.activeCards.size} cards remaining",
                     style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = Color.Gray,
                     modifier = Modifier.padding(top = 12.dp)
                 )
 
@@ -144,7 +144,7 @@ fun FlashcardsScreen(
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(56.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE57373)),
                                 shape = RoundedCornerShape(12.dp)
                             ) {
                                 Icon(Icons.Default.Close, contentDescription = null)
@@ -157,7 +157,7 @@ fun FlashcardsScreen(
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(56.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9CCC65)), // Light Green
+                                colors = ButtonDefaults.buttonColors(containerColor = MorphLightGreen),
                                 shape = RoundedCornerShape(12.dp)
                             ) {
                                 Icon(Icons.Default.Done, contentDescription = null)
@@ -166,13 +166,13 @@ fun FlashcardsScreen(
                             }
                         }
                     }
-                    
+
                     if (!viewModel.isAnswerRevealed && !viewModel.isLoading) {
                         Text(
                             text = "Tap the card to see the answer",
                             modifier = Modifier.align(Alignment.Center),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = Color.Gray
                         )
                     }
                 }
@@ -206,7 +206,7 @@ fun FlashcardItem(
                     cameraDistance = 12f * density
                 }
                 .clip(RoundedCornerShape(24.dp))
-                .background(MaterialTheme.colorScheme.surface)
+                .background(Color.White)
                 .clickable { onToggle() }
                 .padding(24.dp)
         ) {
@@ -217,14 +217,14 @@ fun FlashcardItem(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Surface(
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                        color = MorphTeal.copy(alpha = 0.1f),
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
                             text = "QUESTION",
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                             style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.primary,
+                            color = MorphTeal,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -233,7 +233,7 @@ fun FlashcardItem(
                         text = card.qn,
                         style = MaterialTheme.typography.headlineSmall,
                         textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = TextDark,
                         lineHeight = 32.sp
                     )
                 }
@@ -246,14 +246,14 @@ fun FlashcardItem(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Surface(
-                        color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f),
+                        color = MorphPurple.copy(alpha = 0.1f),
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
                             text = "ANSWER",
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                             style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.secondary,
+                            color = MorphPurple,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -262,7 +262,7 @@ fun FlashcardItem(
                         text = card.ans,
                         style = MaterialTheme.typography.headlineMedium,
                         textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = TextDark,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -275,7 +275,96 @@ fun FlashcardItem(
                 .align(Alignment.TopEnd)
                 .padding(8.dp)
         ) {
-            Text("Skip", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+            Text("Skip", color = MorphTeal, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+fun FlashcardsResultScreen(
+    correct: Int,
+    total: Int,
+    onBackToHome: () -> Unit
+) {
+    val percentage = if (total > 0) (correct.toFloat() / total * 100).toInt() else 0
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BackgroundGray),
+        contentAlignment = Alignment.Center
+    ) {
+        ElevatedCard(
+            modifier = Modifier
+                .fillMaxWidth(0.85f)
+                .padding(24.dp),
+            shape = RoundedCornerShape(32.dp),
+            colors = CardDefaults.elevatedCardColors(containerColor = Color.White),
+            elevation = CardDefaults.elevatedCardElevation(8.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Session Complete!",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = TextDark
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Box(contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(
+                        progress = { 1f },
+                        modifier = Modifier.size(140.dp),
+                        color = Color.LightGray.copy(alpha = 0.2f),
+                        strokeWidth = 12.dp
+                    )
+                    CircularProgressIndicator(
+                        progress = { percentage / 100f },
+                        modifier = Modifier.size(140.dp),
+                        color = if (percentage >= 50) MorphTeal else Color(0xFFE57373),
+                        strokeWidth = 12.dp
+                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "$percentage%",
+                            style = MaterialTheme.typography.displaySmall,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = TextDark
+                        )
+                        Text(
+                            text = "Accuracy",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Color.Gray
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Text(
+                    text = "You got $correct out of $total flashcards correct.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
+                    color = Color.Gray
+                )
+
+                Spacer(modifier = Modifier.height(40.dp))
+
+                Button(
+                    onClick = onBackToHome,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MorphTeal),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text("Back to Topics", fontWeight = FontWeight.Bold)
+                }
+            }
         }
     }
 }
