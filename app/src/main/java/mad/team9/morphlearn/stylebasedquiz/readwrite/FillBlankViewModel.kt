@@ -7,6 +7,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import mad.team9.morphlearn.notes.MaterialsRepository
 import mad.team9.morphlearn.stylebasedquiz.QuizFetchRepository
 import mad.team9.morphlearn.stylebasedquiz.QuizResult
 import mad.team9.morphlearn.stylebasedquiz.QuizResultRepository
@@ -14,6 +15,7 @@ import mad.team9.morphlearn.stylebasedquiz.QuizResultRepository
 class FillBlankViewModel : ViewModel() {
     private val fetchRepo = QuizFetchRepository()
     private val resultRepo = QuizResultRepository()
+    private val materialsRepo: MaterialsRepository = MaterialsRepository()
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
 
@@ -33,6 +35,8 @@ class FillBlankViewModel : ViewModel() {
     var errorMessage by mutableStateOf<String?>(null)
     var subjectName by mutableStateOf<String?>(null)
 
+    private var materialTitle: String = "Unknown Topic"
+
     private var currentMaterialId: String = ""
 
     val currentQuestion: FillBlank?
@@ -49,6 +53,10 @@ class FillBlankViewModel : ViewModel() {
             errorMessage = null
             try {
                 val userId = auth.currentUser?.uid ?: throw Exception("User not logged in")
+
+                // Fetch material title
+                val material = materialsRepo.getMaterial(materialId)
+                materialTitle = material?.title ?: "Unknown Topic"
                 
                 // Fetch Subject Name via Material path: /Users/{userId}/Materials/{materialId}
                 launch {
@@ -156,7 +164,7 @@ class FillBlankViewModel : ViewModel() {
                 attemptNumber = attemptNumber
             )
             // Saves to /Users/{userId}/QuizAttempts as per Repository architecture
-            resultRepo.saveQuizAttempt(result, "Fill in the Blank")
+            resultRepo.saveQuizAttempt(result, materialTitle)
         }
     }
 
