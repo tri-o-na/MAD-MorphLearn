@@ -6,6 +6,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import android.content.Context
 import android.net.Uri
 import android.util.Base64
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mad.team9.morphlearn.BuildConfig
@@ -183,9 +184,9 @@ suspend fun generateNewQuiz(weakQuestions: List<String>, notes: String, learnerT
 fun questionStyleType(learnerType: String): String{
     val questionStyleTypePrompt = when (learnerType) {
         "KINESTHETIC" -> """
-            - FORMAT: Drag-and-drop/Sequencing.
+            - FORMAT: Match Question to Answer.
             - RULE: The 'options' array MUST contain exactly ONE (1) string. 
-            - RULE: DO NOT provide 4 options. 
+            - RULE: ONLY PROVIDE 1 OPTION Per question. 
             - RULE: Provide only the correct answer in the options array.
             - RULE: Set 'correctIndex' to 0.
         """.trimIndent()
