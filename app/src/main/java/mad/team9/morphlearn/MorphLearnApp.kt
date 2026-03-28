@@ -75,7 +75,7 @@ fun MorphLearnApp(
     )
 
     // Define which screens should show navigation elements
-    val bottomBarRoutes = listOf("home", "profile", "library")
+    val bottomBarRoutes = listOf("home", "profile", "notes")
     val shouldShowBottomBar = route in bottomBarRoutes
     val showAIFAB = route == "home"
 
