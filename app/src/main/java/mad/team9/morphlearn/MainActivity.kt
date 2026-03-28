@@ -17,7 +17,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MorphLearnTheme {
+            // Force dynamicColor to false to use the branded colors defined in ui.theme
+            MorphLearnTheme(dynamicColor = false) {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     MorphLearnApp(
                         modifier = Modifier.padding(innerPadding)
