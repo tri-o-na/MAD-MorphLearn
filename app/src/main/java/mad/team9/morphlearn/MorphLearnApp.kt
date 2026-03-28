@@ -47,6 +47,7 @@ import kotlinx.coroutines.launch
 import com.google.firebase.firestore.FirebaseFirestore
 import mad.team9.morphlearn.ai.AIFloatingActionButton
 import mad.team9.morphlearn.ai.AIGeneratedNotes
+import mad.team9.morphlearn.ai.AILoadingScreen
 import mad.team9.morphlearn.ai.AINotesRepository
 import mad.team9.morphlearn.ai.AINotesViewModel
 import java.net.URLEncoder
@@ -318,28 +319,7 @@ fun MorphLearnApp(
             }
 
             if (aiNotesViewModel.isLoading) {
-                BackHandler(true) { }
-                Surface(modifier = Modifier.fillMaxSize(), color = Color.Black.copy(alpha = 0.6f)) {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ){
-                        CircularProgressIndicator(color = Color.White, strokeWidth = 4.dp)
-                        Spacer(modifier= Modifier.height(16.dp))
-                        Text(
-                            text="AI is analyzing...",
-                            color = Color.White,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = "This may take a minute",
-                            color = Color.White.copy(alpha = 0.7f),
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                }
+                AILoadingScreen()
             }
         }
     }
