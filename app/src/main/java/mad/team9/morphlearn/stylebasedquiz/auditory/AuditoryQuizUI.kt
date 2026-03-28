@@ -16,6 +16,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import mad.team9.morphlearn.audio.rememberTextToSpeechController
+import mad.team9.morphlearn.stylebasedquiz.common.QuizAnswerFeedbackControl
+import mad.team9.morphlearn.ui.theme.*
+
+
 
 @Composable
 fun AuditoryQuizUI(
@@ -33,12 +37,17 @@ fun AuditoryQuizUI(
     val selectedIndex = state.selectedAnswers.getOrNull(state.index) ?: -1
     val hasSelected = selectedIndex != -1
 
+    val feedbackControl = remember { QuizAnswerFeedbackControl() }
+
     fun buildQuestionSpeech(): String = buildString {
         append(q.question).append(". ")
         q.options.forEachIndexed { i, opt -> append("Option ${i + 1}. $opt. ") }
     }
-
     LaunchedEffect(state.index, state.confirmed, state.lastAnswerCorrect) {
+        ttsController.stop()
+        isSpeaking = false
+        hasStartedSpeaking = false
+
         if (enableTts && state.confirmed) {
             val feedback = if (state.lastAnswerCorrect == true) "Correct." else "Incorrect."
             ttsController.speak("$feedback The answer is ${q.options[q.correctIndex]}")
@@ -58,7 +67,11 @@ fun AuditoryQuizUI(
         Text("Question ${state.index + 1} / ${state.questions.size}", style = MaterialTheme.typography.titleMedium)
 
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(q.question, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f).clickable { if (enableTts) ttsController.speak(q.question) })
+            Text(q.question, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f).clickable { if (enableTts) {
+                ttsController.speak(q.question)
+                isSpeaking = true
+                hasStartedSpeaking = true
+            } })
             
             IconButton(
                 onClick = {
@@ -72,30 +85,76 @@ fun AuditoryQuizUI(
             }
         }
 
+
+
         q.options.forEachIndexed { idx, option ->
             val isSelected = idx == selectedIndex
             val isCorrect = idx == q.correctIndex
-            val color = when {
-                state.confirmed && isCorrect -> Color(0xFFDFF5E1)
-                state.confirmed && isSelected -> Color(0xFFFDE2E1)
-                isSelected -> Color(0xFFE3F2FD)
-                else -> MaterialTheme.colorScheme.surface
+
+            val optionBackground = when {
+                state.confirmed && isCorrect ->
+                    feedbackControl.getFeedbackColor(true, true)
+                state.confirmed && isSelected && !isCorrect ->
+                    feedbackControl.getFeedbackColor(true, false)
+                isSelected ->
+                    Color(0xFFE3F2FD)
+                else ->
+                    MaterialTheme.colorScheme.surface
+            }
+
+            val optionBorder = when {
+                state.confirmed && isCorrect ->
+                    feedbackControl.getBorderColor(true, true)
+                state.confirmed && isSelected && !isCorrect ->
+                    feedbackControl.getBorderColor(true, false)
+                isSelected ->
+                    MaterialTheme.colorScheme.primary
+                else ->
+                    MaterialTheme.colorScheme.outline
             }
 
             Surface(
-                modifier = Modifier.fillMaxWidth().clickable { if (!state.confirmed) vm.selectAnswer(idx) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        if (!state.confirmed) vm.selectAnswer(idx)
+                        if (enableTts) {
+                            ttsController.speak(option)
+                            isSpeaking = true
+                            hasStartedSpeaking = true
+                        }
+                    },
                 shape = MaterialTheme.shapes.medium,
-                color = color,
-                border = BorderStroke(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline)
+                color = optionBackground,
+                border = BorderStroke(1.dp, optionBorder)
             ) {
-                Text(option, modifier = Modifier.padding(16.dp))
+                Text(
+                    text = option,
+                    color = when {
+                        state.confirmed && isCorrect ->TextDark
+                        state.confirmed && isSelected && !isCorrect -> TextDark
+                        isSelected -> Color(0xFF2D3436)
+                        else -> MaterialTheme.colorScheme.onSurface
+                    },
+                    modifier = Modifier.padding(16.dp)
+                )
             }
         }
 
         if (!state.confirmed) {
-            Button(onClick = { vm.confirmAnswer() }, enabled = hasSelected, modifier = Modifier.fillMaxWidth()) { Text("Confirm") }
+            Button(
+                onClick = { vm.confirmAnswer() },
+                enabled = hasSelected,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Confirm")
+            }
         } else {
-            Button(onClick = { vm.nextOrFinish(topic) }, modifier = Modifier.fillMaxWidth()) {
+
+            Button(
+                onClick = { vm.nextOrFinish(topic) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Text(if (state.index == state.questions.lastIndex) "Finish Quiz" else "Next")
             }
         }
