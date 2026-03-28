@@ -8,9 +8,9 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import mad.team9.morphlearn.notes.MaterialsRepository
-import mad.team9.morphlearn.stylebasedquiz.QuizFetchRepository
-import mad.team9.morphlearn.stylebasedquiz.QuizResult
-import mad.team9.morphlearn.stylebasedquiz.QuizResultRepository
+import mad.team9.morphlearn.stylebasedquiz.common.QuizFetchRepository
+import mad.team9.morphlearn.stylebasedquiz.common.QuizResult
+import mad.team9.morphlearn.stylebasedquiz.common.QuizResultRepository
 
 class FillBlankViewModel : ViewModel() {
     private val fetchRepo = QuizFetchRepository()

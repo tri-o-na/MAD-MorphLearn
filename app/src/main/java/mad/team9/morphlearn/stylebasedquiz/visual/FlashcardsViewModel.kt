@@ -11,9 +11,9 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import mad.team9.morphlearn.notes.MaterialsRepository
-import mad.team9.morphlearn.stylebasedquiz.QuizFetchRepository
-import mad.team9.morphlearn.stylebasedquiz.QuizResult
-import mad.team9.morphlearn.stylebasedquiz.QuizResultRepository
+import mad.team9.morphlearn.stylebasedquiz.common.QuizFetchRepository
+import mad.team9.morphlearn.stylebasedquiz.common.QuizResult
+import mad.team9.morphlearn.stylebasedquiz.common.QuizResultRepository
 
 // Local wrapper to track original index without modifying the global Flashcard class
 data class FlashcardWithIndex(val card: Flashcard, val originalIndex: Int)

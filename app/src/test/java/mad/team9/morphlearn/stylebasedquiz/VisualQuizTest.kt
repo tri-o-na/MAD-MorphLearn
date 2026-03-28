@@ -2,11 +2,7 @@ package mad.team9.morphlearn.stylebasedquiz
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import io.mockk.coEvery
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.mockkStatic
-import io.mockk.unmockkAll
+import io.mockk.*
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
@@ -14,6 +10,11 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import mad.team9.morphlearn.ai.MainDispatcherRule
+import mad.team9.morphlearn.notes.Material
+import mad.team9.morphlearn.notes.MaterialsRepository
+import mad.team9.morphlearn.stylebasedquiz.common.QuizFetchRepository
+import mad.team9.morphlearn.stylebasedquiz.common.QuizQuestion
+import mad.team9.morphlearn.stylebasedquiz.common.QuizResultRepository
 import mad.team9.morphlearn.stylebasedquiz.visual.Flashcard
 import mad.team9.morphlearn.stylebasedquiz.visual.FlashcardsViewModel
 import org.junit.After
@@ -30,6 +31,7 @@ class VisualQuizTest {
     private lateinit var viewModel: FlashcardsViewModel
     private val fetchRepo = mockk<QuizFetchRepository>()
     private val resultRepo = mockk<QuizResultRepository>(relaxed = true)
+    private val materialsRepo = mockk<MaterialsRepository>()
     private val firebaseAuth = mockk<FirebaseAuth>()
     private val firebaseUser = mockk<FirebaseUser>()
 
@@ -40,8 +42,10 @@ class VisualQuizTest {
         every { firebaseAuth.currentUser } returns firebaseUser
         every { firebaseUser.uid } returns "testUserId"
 
-        // Constructor injection is preferred for testing
-        viewModel = FlashcardsViewModel(fetchRepo, resultRepo)
+        // Mock material retrieval since it's now called in loadQuizData
+        coEvery { materialsRepo.getMaterial(any()) } returns Material("testMat", "Test Topic", "Notes")
+
+        viewModel = FlashcardsViewModel(fetchRepo, resultRepo, materialsRepo)
     }
 
     @After
