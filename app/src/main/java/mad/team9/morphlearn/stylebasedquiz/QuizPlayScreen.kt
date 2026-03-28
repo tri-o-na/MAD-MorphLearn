@@ -40,7 +40,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import mad.team9.morphlearn.audio.rememberTextToSpeechController
 import mad.team9.morphlearn.login.FirebaseAuthManager
-import mad.team9.morphlearn.stylebasedquiz.kinesthetic.QuizResultScreen
 import mad.team9.morphlearn.ui.theme.*
 
 @Composable

@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import mad.team9.morphlearn.stylebasedquiz.QuizQuestion
+import mad.team9.morphlearn.stylebasedquiz.QuizResultScreen
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
