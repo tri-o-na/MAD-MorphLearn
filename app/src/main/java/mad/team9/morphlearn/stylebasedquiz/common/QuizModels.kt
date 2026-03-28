@@ -1,4 +1,4 @@
-package mad.team9.morphlearn.stylebasedquiz
+package mad.team9.morphlearn.stylebasedquiz.common
 
 data class QuizMeta(
     val quizId: String = "",

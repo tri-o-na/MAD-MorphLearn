@@ -12,8 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import mad.team9.morphlearn.stylebasedquiz.QuizQuestion
-import mad.team9.morphlearn.stylebasedquiz.QuizResultScreen
+import mad.team9.morphlearn.stylebasedquiz.common.QuizQuestion
+import mad.team9.morphlearn.stylebasedquiz.common.QuizResultScreen
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -33,7 +33,7 @@ fun DragDropQuizScreen(
     // confirm state so user must confirm before going next
     var confirmed by remember { mutableStateOf(false) }
 
-    val feedbackControl = remember { mad.team9.morphlearn.stylebasedquiz.QuizAnswerFeedbackControl() }
+    val feedbackControl = remember { mad.team9.morphlearn.stylebasedquiz.common.QuizAnswerFeedbackControl() }
 
     // Track total user answers across pages - using remember with questions as key
     val allDropTargets = remember(questions) {
@@ -112,6 +112,7 @@ fun DragDropQuizScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 LazyColumn(modifier = Modifier.weight(1f)) {
+                    // ADDED KEY: This ensures each question slot refreshes its position on page change
                     items(currentTargets, key = { it.questionId }) { target ->
                         val isCorrect = if (confirmed) {
                             feedbackControl.isDragDropAnswerCorrect(
@@ -219,15 +220,3 @@ fun DragDropQuizScreen(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun DragDropPreview() {
-    MaterialTheme {
-        DragDropQuizScreen(
-            questions = MockQuizProvider.getMockQuestions(),
-            topic = "Sample Topic",
-            onBackClick = {},
-            onFinish = {}
-        )
-    }
-}
