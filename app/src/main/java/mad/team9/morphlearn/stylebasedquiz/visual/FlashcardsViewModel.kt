@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
+import mad.team9.morphlearn.notes.MaterialsRepository
 import mad.team9.morphlearn.stylebasedquiz.QuizFetchRepository
 import mad.team9.morphlearn.stylebasedquiz.QuizResult
 import mad.team9.morphlearn.stylebasedquiz.QuizResultRepository
@@ -19,7 +20,8 @@ data class FlashcardWithIndex(val card: Flashcard, val originalIndex: Int)
 
 class FlashcardsViewModel(
     private val fetchRepo: QuizFetchRepository = QuizFetchRepository(),
-    private val resultRepo: QuizResultRepository = QuizResultRepository()
+    private val resultRepo: QuizResultRepository = QuizResultRepository(),
+    private val materialsRepo: MaterialsRepository = MaterialsRepository()
 ) : ViewModel() {
 
     // Tracks cards that haven't been answered correctly/wrong yet
@@ -37,6 +39,7 @@ class FlashcardsViewModel(
 
     private var currentMaterialId: String = ""
     private var originalTotalCount: Int = 0
+    private var materialTitle: String = "Unknown Topic"
 
     val currentCard: Flashcard?
         get() = activeCards.getOrNull(currentCardIndex)?.card
@@ -49,6 +52,10 @@ class FlashcardsViewModel(
             isLoading = true
             errorMessage = null
             try {
+                // Fetch material title
+                val material = materialsRepo.getMaterial(materialId)
+                materialTitle = material?.title ?: "Unknown Topic"
+
                 val quizId = fetchRepo.getQuizIdByMaterialId(materialId)
                 if (quizId != null) {
                     val quizQuestions = fetchRepo.getQuizQuestions(quizId)
@@ -109,6 +116,9 @@ class FlashcardsViewModel(
             correctCount++
         }
 
+        // Reset reveal state BEFORE moving to next card to prevent showing answer on next card
+        isAnswerRevealed = false
+
         // Remove from current session queue
         activeCards.removeAt(currentCardIndex)
 
@@ -121,7 +131,6 @@ class FlashcardsViewModel(
             if (currentCardIndex >= activeCards.size) {
                 currentCardIndex = 0
             }
-            isAnswerRevealed = false
         }
     }
 
@@ -130,9 +139,9 @@ class FlashcardsViewModel(
      */
     fun skipCard() {
         if (activeCards.size > 1) {
+            isAnswerRevealed = false
             val card = activeCards.removeAt(currentCardIndex)
             activeCards.add(card)
-            isAnswerRevealed = false
             // currentCardIndex stays the same, so the UI shows the card that was immediately behind.
         } else if (activeCards.size == 1) {
             isAnswerRevealed = false
@@ -158,7 +167,7 @@ class FlashcardsViewModel(
                 attemptNumber = attemptNumber
             )
             // Saves to Users/{userId}/QuizAttempts/{materialId}
-            resultRepo.saveQuizAttempt(result, "Visual - Flashcards")
+            resultRepo.saveQuizAttempt(result, materialTitle)
         }
     }
 
