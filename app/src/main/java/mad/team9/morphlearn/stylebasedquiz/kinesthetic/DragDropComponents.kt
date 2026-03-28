@@ -78,13 +78,14 @@ fun DraggableAnswer(
             }
             .padding(4.dp),
         shape = RoundedCornerShape(12.dp),
-        color = Color.White,
+        color = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.onSurface,
         border = BorderStroke(
             1.dp,
             when {
-                !enabled -> Color.Gray
-                isDragging -> Color(0xFF006064)
-                else -> Color.LightGray
+                !enabled -> MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                isDragging -> MaterialTheme.colorScheme.primary
+                else -> MaterialTheme.colorScheme.outline
             }
         ),
         shadowElevation = if (isDragging) 8.dp else 2.dp
@@ -106,7 +107,7 @@ fun QuestionSlot(state: DropTargetState,
                  backgroundColor: Color,
                  borderColor: Color) {
     val isFilled = state.currentAnswer != null
-    val primaryTeal = Color(0xFF006064)
+    val primaryColor = MaterialTheme.colorScheme.primary
 
     ElevatedCard(
         modifier = Modifier
@@ -119,16 +120,18 @@ fun QuestionSlot(state: DropTargetState,
                 width = if (enabled) {
                     if (isFilled) 2.dp else 1.dp
                 } else 2.dp,
-                color = if (enabled && isFilled) primaryTeal else borderColor,
+                color = if (enabled && isFilled) primaryColor else borderColor,
                 shape = RoundedCornerShape(16.dp)
             ),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.elevatedCardColors(
             containerColor = if (enabled) {
-                if (isFilled) Color(0xFFE0F2F1) else Color.White
+                if (isFilled) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f) 
+                else MaterialTheme.colorScheme.surface
             } else {
                 backgroundColor
-            }
+            },
+            contentColor = MaterialTheme.colorScheme.onSurface
         )
     ) {
         Column(
@@ -143,8 +146,8 @@ fun QuestionSlot(state: DropTargetState,
                 color = when {
                     !enabled && borderColor == Color(0xFF2E7D32) -> Color(0xFF2E7D32)
                     !enabled && borderColor == Color(0xFFC62828) -> Color(0xFFC62828)
-                    isFilled -> primaryTeal
-                    else -> Color.Unspecified
+                    isFilled -> primaryColor
+                    else -> MaterialTheme.colorScheme.onSurface
                 }
             )
             
@@ -153,12 +156,16 @@ fun QuestionSlot(state: DropTargetState,
                     .fillMaxWidth()
                     .heightIn(min = 48.dp)
                     .background(
-                        color = if (!enabled) backgroundColor else if (isFilled) Color.White else Color(0xFFF1F3F4),
+                        color = if (!enabled) backgroundColor 
+                                else if (isFilled) MaterialTheme.colorScheme.surface 
+                                else MaterialTheme.colorScheme.surfaceVariant,
                         shape = RoundedCornerShape(8.dp)
                     )
                     .border(
                         width = 1.dp,
-                        color = if (!enabled) borderColor else if (isFilled) primaryTeal else Color.LightGray,
+                        color = if (!enabled) borderColor 
+                                else if (isFilled) primaryColor 
+                                else MaterialTheme.colorScheme.outline,
                         shape = RoundedCornerShape(8.dp)
                     )
                     .padding(12.dp),
@@ -170,8 +177,8 @@ fun QuestionSlot(state: DropTargetState,
                     color = when {
                         !enabled && borderColor == Color(0xFF2E7D32) -> Color(0xFF2E7D32)
                         !enabled && borderColor == Color(0xFFC62828) -> Color(0xFFC62828)
-                        isFilled -> primaryTeal
-                        else -> Color.Gray
+                        isFilled -> primaryColor
+                        else -> MaterialTheme.colorScheme.onSurfaceVariant
                     },
                     fontWeight = if (isFilled) FontWeight.Bold else FontWeight.Normal,
                     textAlign = TextAlign.Center

@@ -46,6 +46,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
+import mad.team9.morphlearn.ui.theme.*
 
 private fun getQuizTypeLabel(learningStyle: String?): String {
     return when (learningStyle?.trim()?.uppercase()) {
@@ -73,184 +74,139 @@ fun NotesScreen(
     }
 
     val expandedSubjects = remember { mutableStateMapOf<String, Boolean>() }
-    val primaryTeal = Color(0xFF006064)
     val quizTypeLabel = getQuizTypeLabel(learningStyle)
 
-    Scaffold(
-        bottomBar = {
-            NavigationBar(
-                containerColor = Color.White,
-                tonalElevation = 8.dp
-            ) {
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentDestination = navBackStackEntry?.destination
-                val items = listOf("notes", "home", "profile")
 
-                items.forEach { screen ->
-                    val isSelected = currentDestination?.hierarchy?.any { it.route == screen } == true
-                    NavigationBarItem(
-                        icon = {
-                            when (screen) {
-                                "home" -> Icon(Icons.Default.Home, contentDescription = null)
-                                "notes" -> Icon(Icons.Default.LibraryBooks, contentDescription = null)
-                                "profile" -> Icon(Icons.Default.Person, contentDescription = null)
-                            }
-                        },
-                        label = {
-                            Text(
-                                if (screen == "notes") "Library"
-                                else screen.replaceFirstChar { it.uppercase() }
-                            )
-                        },
-                        selected = isSelected,
-                        onClick = {
-                            if (!isSelected) {
-                                navController.navigate(screen) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
-                                    }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            }
-                        },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = primaryTeal,
-                            selectedTextColor = primaryTeal,
-                            indicatorColor = Color(0xFFE0F2F1)
-                        )
-                    )
-                }
-            }
-        }
-    ) { innerPadding ->
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BackgroundGray)
+    ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFFF8F9FA))
+                .fillMaxWidth()
+                .background(
+                    color = MorphTeal,
+                    shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
+                )
+                .padding(start = 20.dp, top = 24.dp, end = 20.dp, bottom = 22.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        color = primaryTeal,
-                        shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
+            Text(
+                text = "My Library",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        }
+
+        if (error != null) {
+            Text(
+                text = "Error: $error",
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
+            )
+            return@Column
+        }
+
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = 20.dp,
+                end = 20.dp,
+                top = 16.dp,
+//                bottom = innerPadding.calculateBottomPadding() + 20.dp
+            ),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(groupedMaterials, key = { it.subjectName }) { group ->
+                val isExpanded = expandedSubjects[group.subjectName] ?: true
+
+                ElevatedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = androidx.compose.material3.CardDefaults.elevatedCardColors(
+                        containerColor = Color.White,
+                        contentColor = TextDark
                     )
-                    .padding(start = 20.dp, top = 24.dp, end = 20.dp, bottom = 22.dp)
-            ) {
-                Text(
-                    text = "My Library",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-            }
-
-            if (error != null) {
-                Text(
-                    text = "Error: $error",
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
-                )
-                return@Column
-            }
-
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(
-                    start = 20.dp,
-                    end = 20.dp,
-                    top = 16.dp,
-                    bottom = innerPadding.calculateBottomPadding() + 20.dp
-                ),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(groupedMaterials, key = { it.subjectName }) { group ->
-                    val isExpanded = expandedSubjects[group.subjectName] ?: true
-
-                    ElevatedCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(20.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Column(
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                                .clickable {
+                                    expandedSubjects[group.subjectName] = !isExpanded
+                                },
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        expandedSubjects[group.subjectName] = !isExpanded
-                                    },
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "${group.subjectName} (${group.materials.size})",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF2D3436)
-                                )
+                            Text(
+                                text = "${group.subjectName} (${group.materials.size})",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = TextDark
+                            )
 
-                                Icon(
-                                    imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                                    contentDescription = if (isExpanded) "Collapse" else "Expand",
-                                    tint = primaryTeal
-                                )
-                            }
+                            Icon(
+                                imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                contentDescription = if (isExpanded) "Collapse" else "Expand",
+                                tint = MorphTeal
+                            )
+                        }
 
-                            if (isExpanded) {
-                                group.materials.forEach { material ->
-                                    ElevatedButton(
-                                        onClick = { onOpenTopic(material.id) },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .defaultMinSize(minHeight = 88.dp)
-                                            .border(
-                                                width = 1.dp,
-                                                color = Color(0xFFE3E8EA),
-                                                shape = RoundedCornerShape(16.dp)
-                                            ),
-                                        colors = ButtonDefaults.elevatedButtonColors(
-                                            containerColor = Color.White,
-                                            contentColor = Color(0xFF2D3436)
+                        if (isExpanded) {
+                            group.materials.forEach { material ->
+                                ElevatedButton(
+                                    onClick = { onOpenTopic(material.id) },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .defaultMinSize(minHeight = 88.dp)
+                                        .border(
+                                            width = 1.dp,
+                                            color = Color(0xFFE3E8EA),
+                                            shape = RoundedCornerShape(16.dp)
                                         ),
-                                        shape = RoundedCornerShape(16.dp),
-                                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+                                    colors = ButtonDefaults.elevatedButtonColors(
+                                        containerColor = Color.White,
+                                        contentColor = TextDark
+                                    ),
+                                    shape = RoundedCornerShape(16.dp),
+                                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+                                ) {
+                                    Column(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalArrangement = Arrangement.spacedBy(6.dp)
                                     ) {
-                                        Column(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                                        ) {
-                                            Text(
-                                                text = material.title.ifBlank { "Untitled Topic" },
-                                                fontWeight = FontWeight.SemiBold,
-                                                fontSize = 15.sp,
-                                                color = Color(0xFF2D3436)
-                                            )
+                                        Text(
+                                            text = material.title.ifBlank { "Untitled Topic" },
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 15.sp,
+                                            color = TextDark
+                                        )
 
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.Start
+                                        ) {
                                             Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.Start
-                                            ) {
-                                                Row(
-                                                    modifier = Modifier
-                                                        .background(
-                                                            color = Color(0xFFD7ECEB),
-                                                            shape = RoundedCornerShape(50)
-                                                        )
-                                                        .padding(horizontal = 10.dp, vertical = 4.dp),
-                                                    verticalAlignment = Alignment.CenterVertically
-                                                ) {
-                                                    Text(
-                                                        text = quizTypeLabel,
-                                                        fontSize = 12.sp,
-                                                        fontWeight = FontWeight.Medium,
-                                                        color = primaryTeal
+                                                modifier = Modifier
+                                                    .background(
+                                                        color = TrackTeal,
+                                                        shape = RoundedCornerShape(50)
                                                     )
-                                                }
+                                                    .padding(horizontal = 10.dp, vertical = 4.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    text = quizTypeLabel,
+                                                    fontSize = 12.sp,
+                                                    fontWeight = FontWeight.Medium,
+                                                    color = MorphTeal
+                                                )
                                             }
                                         }
                                     }

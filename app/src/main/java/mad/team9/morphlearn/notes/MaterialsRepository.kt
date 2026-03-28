@@ -26,17 +26,18 @@ class MaterialsRepository(
             .await()
 
         val subjectMap = subjectsSnapshot.documents.associate { doc ->
-            val materialId = doc.getString("materialId") ?: ""
-            val subjectName = doc.getString("name") ?: "Others"
-            materialId to subjectName
+            doc.id to (doc.getString("name") ?: "Others")
         }
 
         return materialsSnapshot.documents.map { doc ->
+            val subjectId = doc.getString("subjectId") ?: ""
+
             Material(
                 id = doc.id,
                 title = doc.getString("title") ?: "",
                 generatedNotes = doc.getString("generatedNotes") ?: "",
-                subjectName = subjectMap[doc.id] ?: "Others"
+                subjectId = subjectId,
+                subjectName = subjectMap[subjectId] ?: "Others"
             )
         }
     }
@@ -52,19 +53,23 @@ class MaterialsRepository(
 
         if (!doc.exists()) return null
 
-        val subjectSnapshot = userDoc
-            .collection("Subjects")
-            .whereEqualTo("materialId", materialId)
-            .limit(1)
-            .get()
-            .await()
+        val subjectId = doc.getString("subjectId") ?: ""
 
-        val subjectName = subjectSnapshot.documents.firstOrNull()?.getString("name") ?: "Others"
+        val subjectName = if (subjectId.isNotBlank()) {
+            userDoc.collection("Subjects")
+                .document(subjectId)
+                .get()
+                .await()
+                .getString("name") ?: "Others"
+        } else {
+            "Others"
+        }
 
         return Material(
             id = doc.id,
             title = doc.getString("title") ?: "",
             generatedNotes = doc.getString("generatedNotes") ?: "",
+            subjectId = subjectId,
             subjectName = subjectName
         )
     }

@@ -1,6 +1,7 @@
 package mad.team9.morphlearn.stylebasedquiz
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -9,8 +10,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
@@ -22,15 +23,14 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,12 +41,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import mad.team9.morphlearn.audio.rememberTextToSpeechController
 import mad.team9.morphlearn.login.FirebaseAuthManager
 import mad.team9.morphlearn.stylebasedquiz.kinesthetic.QuizResultScreen
+import mad.team9.morphlearn.ui.theme.*
 
 @Composable
 fun QuizPlayScreen(
     quizId: String,
     topic: String,
     onDone: () -> Unit,
+    onBackToNotes: () -> Unit,
     vm: QuizPlayViewModel = viewModel()
 ) {
     val state by vm.state.collectAsState()
@@ -59,14 +61,22 @@ fun QuizPlayScreen(
 
     when {
         state.loading || learningStyle == null -> Box(
-            Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
             CircularProgressIndicator()
         }
 
-        state.error != null -> Column(Modifier.padding(16.dp)) {
-            Text("Error: ${state.error}", color = MaterialTheme.colorScheme.error)
+        state.error != null -> Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(BackgroundGray)
+                .padding(16.dp)
+        ) {
+            Text(
+                text = "Error: ${state.error}",
+                color = MaterialTheme.colorScheme.error
+            )
         }
 
         state.finished -> {
@@ -91,8 +101,8 @@ fun QuizPlayScreen(
                         state = state,
                         topic = topic,
                         vm = vm,
-
-                        enableTts = learningStyle?.trim()?.uppercase() in setOf("AUDITORY")
+                        onBackToNotes = onBackToNotes,
+                        enableTts = learningStyle?.trim()?.uppercase() == "AUDITORY"
                     )
                 }
             )
@@ -105,12 +115,18 @@ fun StandardQuizUI(
     state: QuizPlayState,
     topic: String,
     vm: QuizPlayViewModel,
+    onBackToNotes: () -> Unit,
     enableTts: Boolean = false
 ) {
     val q = state.questions.getOrNull(state.index)
     if (q == null) {
-        Column(Modifier.padding(16.dp)) {
-            Text("No questions found.")
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(BackgroundGray)
+                .padding(16.dp)
+        ) {
+            Text("No questions found.", color = TextDark)
         }
         return
     }
@@ -121,7 +137,6 @@ fun StandardQuizUI(
 
     val selectedIndex = state.selectedAnswers.getOrNull(state.index) ?: -1
     val hasSelected = selectedIndex != -1
-    val primaryTeal = Color(0xFF006064)
 
     fun buildQuestionSpeech(): String {
         return buildString {
@@ -133,7 +148,6 @@ fun StandardQuizUI(
         }
     }
 
-    // Speak feedback after confirm
     LaunchedEffect(state.index, state.confirmed, state.lastAnswerCorrect, enableTts) {
         if (enableTts && state.confirmed) {
             val correctAnswerText = q.options.getOrElse(q.correctIndex) { "" }
@@ -149,14 +163,26 @@ fun StandardQuizUI(
     }
 
     Column(
-        Modifier
+        modifier = Modifier
             .fillMaxSize()
+            .background(BackgroundGray)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        Button(
+            onClick = onBackToNotes,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MorphTeal,
+                contentColor = Color.White
+            )
+        ) {
+            Text("Back to Notes")
+        }
+
         Text(
-            "Question ${state.index + 1} / ${state.questions.size}",
-            style = MaterialTheme.typography.titleMedium
+            text = "Question ${state.index + 1} / ${state.questions.size}",
+            style = MaterialTheme.typography.titleMedium,
+            color = TextDark
         )
 
         Row(
@@ -167,6 +193,7 @@ fun StandardQuizUI(
             Text(
                 text = q.question,
                 style = MaterialTheme.typography.titleLarge,
+                color = TextDark,
                 modifier = Modifier
                     .weight(1f)
                     .then(
@@ -199,7 +226,7 @@ fun StandardQuizUI(
                         .size(44.dp)
                         .border(
                             width = 1.5.dp,
-                            color = primaryTeal,
+                            color = MorphTeal,
                             shape = CircleShape
                         )
                 ) {
@@ -214,7 +241,7 @@ fun StandardQuizUI(
                             hasStartedSpeaking -> "Replay question and options"
                             else -> "Read question and options aloud"
                         },
-                        tint = primaryTeal
+                        tint = MorphTeal
                     )
                 }
             }
@@ -257,6 +284,7 @@ fun StandardQuizUI(
             ) {
                 Text(
                     text = option,
+                    color = TextDark,
                     modifier = Modifier.padding(16.dp),
                     textAlign = TextAlign.Start
                 )
@@ -269,10 +297,11 @@ fun StandardQuizUI(
                 enabled = hasSelected,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = primaryTeal,
-                    contentColor = Color.White
+                    containerColor = MorphTeal,
+                    contentColor = Color.White,
+                    disabledContainerColor = MorphTeal.copy(alpha = 0.35f),
+                    disabledContentColor = Color.White.copy(alpha = 0.85f)
                 )
-
             ) {
                 Text("Confirm")
             }
@@ -283,14 +312,13 @@ fun StandardQuizUI(
                 style = MaterialTheme.typography.titleMedium
             )
 
-            OutlinedButton(
+            Button(
                 onClick = { vm.nextOrFinish(topic) },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = primaryTeal,
+                    containerColor = MorphTeal,
                     contentColor = Color.White
                 )
-
             ) {
                 Text(if (state.index == state.questions.lastIndex) "Finish Quiz" else "Next")
             }
