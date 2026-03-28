@@ -23,10 +23,12 @@ import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -66,16 +68,14 @@ fun NoteDetailsScreen(
 
     val isAuditoryLearner = learningStyle?.trim()?.uppercase() == "AUDITORY"
 
-    LaunchedEffect(Unit) {
-        viewModel.loadMaterials()
-        viewModel.loadLearningStyle()
-    }
-    LaunchedEffect(materialId) { viewModel.getQuizIdByMaterialId(materialId) }
-    LaunchedEffect(quizId) { viewModel.checkQuizAttempt(quizId) }
+    val isLoadingCompleted by viewModel.isLoadingCompleted.collectAsState()
 
-    Log.d("CHECK_QUIZ_ID", "Quiz ID: $quizId")
+    LaunchedEffect(Unit) {
+        viewModel.initializeNoteData(materialId)
+    }
 
     val material = materials.firstOrNull { it.id == materialId }
+
 
     Column(
         modifier = Modifier
@@ -202,6 +202,7 @@ fun NoteDetailsScreen(
                         "No quiz found for materialId=$materialId"
                     )
                 },
+                enabled = isLoadingCompleted,
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
@@ -213,26 +214,30 @@ fun NoteDetailsScreen(
                 Text("Take Quiz")
             }
 
-            if (hasAttemptedQuiz) {
-                Spacer(Modifier.weight(0.5f))
+            Spacer(Modifier.weight(0.5f))
 
-                Button(
-                    onClick = {
-                        viewModel.resetForNewQuiz()
-                        onRegenerateQuiz(materialId)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MorphTeal,
-                        contentColor = Color.White
-                    )
-                ) {
-                    Text("Regenerate Quiz")
-                }
+            Button(
+                onClick = {
+                    viewModel.resetForNewQuiz()
+                    onRegenerateQuiz(materialId)
+                },
+                enabled = hasAttemptedQuiz,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MorphTeal,
+                    contentColor = Color.White
+                )
+            ) {
+                Text("Regenerate Quiz")
             }
+
         }
+    }
+
+    if (!isLoadingCompleted){
+        NoteLoadingScreen()
     }
 }
 
@@ -319,5 +324,30 @@ private fun BulletLine(
             modifier = Modifier.weight(1f),
             textAlign = TextAlign.Start
         )
+    }
+}
+
+@Composable
+fun NoteLoadingScreen(){
+    Surface(modifier = Modifier.fillMaxSize(), color = Color.Black.copy(alpha = 0.6f)) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ){
+            CircularProgressIndicator(color = Color.White, strokeWidth = 4.dp)
+            Spacer(modifier= Modifier.height(16.dp))
+            Text(
+                text="Fetching data...",
+                color = Color.White,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "This may take a minute",
+                color = Color.White.copy(alpha = 0.7f),
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
     }
 }

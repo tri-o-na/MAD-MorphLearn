@@ -33,6 +33,9 @@ class NotesViewModel(
     private val _learningStyle = MutableStateFlow<String?>(null)
     val learningStyle: StateFlow<String?> = _learningStyle
 
+    private val _isLoadingCompleted = MutableStateFlow<Boolean>(false)
+    val isLoadingCompleted : StateFlow<Boolean> = _isLoadingCompleted
+
     fun loadLearningStyle() {
         viewModelScope.launch {
             try {
@@ -67,32 +70,29 @@ class NotesViewModel(
         }
     }
 
-    fun getQuizIdByMaterialId(materialId: String) {
-        viewModelScope.launch {
-            try{
-                _error.value = null
-                _quizId.value = repo.getLatestQuiz(materialId)
-            } catch (e: Exception){
-                _error.value = e.message
-            }
-        }
-    }
-
     fun resetForNewQuiz() {
         _quizId.value = null
         _hasAttemptedQuiz.value = false
     }
 
-    fun checkQuizAttempt(quizId: String?) {
-        if (quizId == null) {
-            _hasAttemptedQuiz.value = false
-            return
-        }
-
+    fun initializeNoteData(materialId: String){
+        _isLoadingCompleted.value = false // reset loading
         viewModelScope.launch {
-            try {
+            try{
                 _error.value = null
-                _hasAttemptedQuiz.value = repo.checkQuizAttempt(quizId)
+
+                // Load style and materials
+                launch { loadMaterials() }
+                launch { loadLearningStyle() }
+
+                // Load Quiz data
+                val id = repo.getLatestQuiz(materialId)
+                _quizId.value = id
+
+                if (id != null) _hasAttemptedQuiz.value = repo.checkQuizAttempt(id)
+
+                _isLoadingCompleted.value = true // set loading as complete
+
             } catch (e: Exception){
                 _error.value = e.message
             }
