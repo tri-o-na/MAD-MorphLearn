@@ -89,8 +89,8 @@ fun AIFloatingActionButton(
             showUploadModal = true
             showConfigureModal = false
         },
-        containerColor = MorphTeal,
-        contentColor = Color.White
+        containerColor = MaterialTheme.colorScheme.primary,
+        contentColor = MaterialTheme.colorScheme.onPrimary
     ) {
         Icon(
             imageVector = Icons.Default.Add,
@@ -194,9 +194,9 @@ fun AIUploadPDFModal(
             enabled = selectedUri != null,
             modifier = Modifier.fillMaxWidth().height(56.dp),
             shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = MorphTeal) // teal color
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary) // teal color
         ) {
-            Text("Continue", color = Color.White, fontWeight = FontWeight.Bold)
+            Text("Continue", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold)
         }
         Spacer(modifier = Modifier.height(20.dp))
 
@@ -296,11 +296,11 @@ fun AIConfigureModal(
             modifier = Modifier.fillMaxWidth().height(56.dp),
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = MorphTeal,
+                containerColor = MaterialTheme.colorScheme.primary,
                 disabledContentColor = Color.LightGray
             )
         ) {
-            Text("Upload and Generate", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSecondary)
+            Text("Upload and Generate", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
         }
     }
 }
