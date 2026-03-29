@@ -2,9 +2,12 @@ package mad.team9.morphlearn.stylebasedquiz.readwrite
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
@@ -14,15 +17,21 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import mad.team9.morphlearn.ui.theme.*
+import mad.team9.morphlearn.stylebasedquiz.common.QuizAnswerFeedbackControl
+import mad.team9.morphlearn.stylebasedquiz.common.QuizResultScreen
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FillBlankScreen(
     materialId: String,
@@ -30,74 +39,43 @@ fun FillBlankScreen(
     onBackToHome: () -> Unit,
     viewModel: FillBlankViewModel = viewModel()
 ) {
+    val feedbackControl = remember { QuizAnswerFeedbackControl() }
+    val focusRequester = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
+    val scrollState = rememberScrollState()
+
     LaunchedEffect(materialId) {
         viewModel.loadQuizData(materialId)
+    }
+
+    // Auto-focus the text field when a new question is shown
+    LaunchedEffect(viewModel.currentQuestionIndex) {
+        if (!viewModel.isAnswered && !viewModel.isLoading) {
+            focusRequester.requestFocus()
+        }
     }
 
     BackHandler {
         onBackToLibrary()
     }
 
-    FillBlankContent(
-        isLoading = viewModel.isLoading,
-        isFinished = viewModel.isFinished,
-        errorMessage = viewModel.errorMessage,
-        subjectName = viewModel.subjectName,
-        currentQuestionIndex = viewModel.currentQuestionIndex,
-        totalQuestions = viewModel.totalQuestions,
-        currentQuestion = viewModel.currentQuestion,
-        userAnswer = viewModel.userAnswer,
-        isAnswered = viewModel.isAnswered,
-        isCorrect = viewModel.isCorrect,
-        correctCount = viewModel.correctCount,
-        onBackToLibrary = onBackToLibrary,
-        onBackToHome = onBackToHome,
-        onUserAnswerChange = { viewModel.userAnswer = it },
-        onSubmitAnswer = { viewModel.submitAnswer() },
-        onNextQuestion = { viewModel.nextQuestion() },
-        onRestart = { viewModel.restart() }
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun FillBlankContent(
-    isLoading: Boolean,
-    isFinished: Boolean,
-    errorMessage: String?,
-    subjectName: String?,
-    currentQuestionIndex: Int,
-    totalQuestions: Int,
-    currentQuestion: FillBlank?,
-    userAnswer: String,
-    isAnswered: Boolean,
-    isCorrect: Boolean,
-    correctCount: Int,
-    onBackToLibrary: () -> Unit,
-    onBackToHome: () -> Unit,
-    onUserAnswerChange: (String) -> Unit,
-    onSubmitAnswer: () -> Unit,
-    onNextQuestion: () -> Unit,
-    onRestart: () -> Unit
-) {
-    if (isFinished) {
-        FillBlankResultScreen(
-            correct = correctCount,
-            total = totalQuestions,
-            onBackToHome = onBackToHome,
-            onRestart = onRestart
+    if (viewModel.isFinished) {
+        QuizResultScreen(
+            score = viewModel.correctCount,
+            totalQuestions = viewModel.totalQuestions,
+            onDone = onBackToHome
         )
-    } else if (isLoading) {
+    } else if (viewModel.isLoading) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(color = MorphTeal)
+            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
         }
-    } else if (errorMessage != null) {
+    } else if (viewModel.errorMessage != null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(errorMessage, color = Color.Red)
+                Text(viewModel.errorMessage!!, color = MaterialTheme.colorScheme.error)
                 Spacer(modifier = Modifier.height(16.dp))
-                Button(onClick = onBackToLibrary, colors = ButtonDefaults.buttonColors(containerColor = MorphTeal)) {
-                    Text("Go Back", color = Color.White)
+                Button(onClick = onBackToLibrary) {
+                    Text("Go Back")
                 }
             }
         }
@@ -107,51 +85,54 @@ fun FillBlankContent(
                 TopAppBar(
                     title = {
                         Column {
-                            Text("Fill in the Blank", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                            if (subjectName != null) {
-                                Text(subjectName, fontSize = 12.sp, fontWeight = FontWeight.Normal)
-                            }
+                            Text(
+                                text = "Fill in the Blank",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Text(
+                                text = "Question ${viewModel.currentQuestionIndex + 1} of ${viewModel.totalQuestions}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     },
                     navigationIcon = {
                         IconButton(onClick = onBackToLibrary) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back"
+                            )
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MorphTeal,
-                        titleContentColor = Color.White,
-                        navigationIconContentColor = Color.White
-                    ),
-                    windowInsets = WindowInsets(0, 0, 0, 0)
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        titleContentColor = MaterialTheme.colorScheme.primary,
+                        navigationIconContentColor = MaterialTheme.colorScheme.primary
+                    )
                 )
             },
-            containerColor = BackgroundGray
+            containerColor = MaterialTheme.colorScheme.background
         ) { padding ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
+                    .imePadding() // Ensure content is pushed up by the keyboard
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Progress Bar
-                val progress = if (totalQuestions > 0) (currentQuestionIndex + 1).toFloat() / totalQuestions else 0f
+                val progress = if (viewModel.totalQuestions > 0)
+                    (viewModel.currentQuestionIndex + 1).toFloat() / viewModel.totalQuestions else 0f
+
                 LinearProgressIndicator(
                     progress = { progress },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(8.dp)
                         .clip(RoundedCornerShape(4.dp)),
-                    color = MorphTeal,
-                    trackColor = Color.LightGray.copy(alpha = 0.3f)
-                )
-
-                Text(
-                    text = "Question ${currentQuestionIndex + 1} of $totalQuestions",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = Color.Gray,
-                    modifier = Modifier.padding(top = 12.dp)
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))
@@ -162,80 +143,105 @@ fun FillBlankContent(
                         .fillMaxWidth()
                         .weight(1f),
                     shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.elevatedCardColors(containerColor = Color.White)
+                    colors = CardDefaults.elevatedCardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
+                            .verticalScroll(scrollState) // Allow scrolling if the keyboard reduces available height
                             .padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
                         Surface(
-                            color = MorphTeal.copy(alpha = 0.1f),
+                            color = MaterialTheme.colorScheme.primaryContainer,
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
-                                text = "FILL IN THE BLANK",
+                                text = "TEST YOUR KNOWLEDGE",
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                                 style = MaterialTheme.typography.labelLarge,
-                                color = MorphTeal,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 fontWeight = FontWeight.Bold
                             )
                         }
 
                         Spacer(modifier = Modifier.height(32.dp))
 
-                        currentQuestion?.let { question ->
+                        viewModel.currentQuestion?.let { question ->
                             Text(
                                 text = question.qn,
                                 style = MaterialTheme.typography.headlineSmall,
                                 textAlign = TextAlign.Center,
-                                color = TextDark,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 lineHeight = 32.sp
                             )
 
                             Spacer(modifier = Modifier.height(40.dp))
 
+                            val borderColor = feedbackControl.getBorderColor(
+                                viewModel.isAnswered,
+                                if (viewModel.isAnswered) viewModel.isCorrect else null
+                            )
+
                             OutlinedTextField(
-                                value = userAnswer,
-                                onValueChange = { if (!isAnswered) onUserAnswerChange(it) },
-                                modifier = Modifier.fillMaxWidth(),
-                                placeholder = { Text("Type your answer here...", color = Color.Gray) },
+                                value = viewModel.userAnswer,
+                                onValueChange = { if (!viewModel.isAnswered) viewModel.userAnswer = it },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .focusRequester(focusRequester),
+                                placeholder = { Text("Type your answer here...") },
                                 shape = RoundedCornerShape(12.dp),
                                 singleLine = true,
-                                enabled = !isAnswered,
+                                enabled = !viewModel.isAnswered,
+                                keyboardOptions = KeyboardOptions(
+                                    imeAction = ImeAction.Done,
+                                    capitalization = KeyboardCapitalization.Sentences
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onDone = {
+                                        if (viewModel.userAnswer.isNotBlank() && !viewModel.isAnswered) {
+                                            focusManager.clearFocus()
+                                            viewModel.submitAnswer()
+                                        }
+                                    }
+                                ),
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = MorphTeal,
-                                    unfocusedBorderColor = Color.LightGray,
-                                    focusedTextColor = TextDark,
-                                    unfocusedTextColor = TextDark,
-                                    disabledTextColor = TextDark
+                                    focusedBorderColor = if (viewModel.isAnswered) borderColor else MaterialTheme.colorScheme.primary,
+                                    unfocusedBorderColor = if (viewModel.isAnswered) borderColor else MaterialTheme.colorScheme.outline,
+                                    disabledBorderColor = borderColor,
+                                    disabledTextColor = MaterialTheme.colorScheme.onSurface
                                 )
                             )
 
-                            AnimatedVisibility(visible = isAnswered) {
+                            AnimatedVisibility(
+                                visible = viewModel.isAnswered,
+                                enter = expandVertically() + fadeIn(),
+                                exit = shrinkVertically() + fadeOut()
+                            ) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Spacer(modifier = Modifier.height(24.dp))
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(
-                                            imageVector = if (isCorrect) Icons.Default.CheckCircle else Icons.Default.Error,
+                                            imageVector = if (viewModel.isCorrect) Icons.Default.CheckCircle else Icons.Default.Error,
                                             contentDescription = null,
-                                            tint = if (isCorrect) MorphLightGreen else Color.Red
+                                            tint = if (viewModel.isCorrect) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
-                                            text = if (isCorrect) "Correct!" else "Incorrect",
-                                            color = if (isCorrect) MorphLightGreen else Color.Red,
+                                            text = if (viewModel.isCorrect) "Correct!" else "Incorrect",
+                                            color = if (viewModel.isCorrect) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error,
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 18.sp
                                         )
                                     }
-                                    if (!isCorrect) {
+                                    if (!viewModel.isCorrect) {
                                         Text(
                                             text = "Correct answer: ${question.ans}",
                                             style = MaterialTheme.typography.bodyLarge,
-                                            color = Color.Black,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             fontWeight = FontWeight.Medium,
                                             modifier = Modifier.padding(top = 8.dp)
                                         )
@@ -251,151 +257,31 @@ fun FillBlankContent(
                 // Action Button
                 Button(
                     onClick = {
-                        if (isAnswered) {
-                            onNextQuestion()
+                        if (viewModel.isAnswered) {
+                            viewModel.nextQuestion()
                         } else {
-                            onSubmitAnswer()
+                            focusManager.clearFocus()
+                            viewModel.submitAnswer()
                         }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isAnswered) MorphTeal else MorphPurple,
-                        contentColor = Color.White
+                        containerColor = MaterialTheme.colorScheme.primary
                     ),
                     shape = RoundedCornerShape(12.dp),
-                    enabled = userAnswer.isNotBlank()
+                    enabled = viewModel.userAnswer.isNotBlank() || viewModel.isAnswered
                 ) {
                     Text(
-                        text = if (isAnswered) "Next Question" else "Submit Answer",
+                        text = if (viewModel.isAnswered) {
+                            if (viewModel.currentQuestionIndex < viewModel.totalQuestions - 1) "Next Question" else "Finish Quiz"
+                        } else "Submit Answer",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        color = Color.White
+                        fontSize = 16.sp
                     )
                 }
             }
         }
     }
-}
-
-@Composable
-fun FillBlankResultScreen(
-    correct: Int,
-    total: Int,
-    onBackToHome: () -> Unit,
-    onRestart: () -> Unit
-) {
-    val percentage = if (total > 0) (correct.toFloat() / total * 100).toInt() else 0
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BackgroundGray),
-        contentAlignment = Alignment.Center
-    ) {
-        ElevatedCard(
-            modifier = Modifier
-                .fillMaxWidth(0.85f)
-                .padding(24.dp),
-            shape = RoundedCornerShape(32.dp),
-            colors = CardDefaults.elevatedCardColors(containerColor = Color.White),
-            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Quiz Completed!",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MorphTeal
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Box(contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(
-                        progress = { percentage / 100f },
-                        modifier = Modifier.size(120.dp),
-                        color = if (percentage >= 50) MorphLightGreen else Color.Red,
-                        strokeWidth = 10.dp,
-                        trackColor = Color.LightGray.copy(alpha = 0.3f)
-                    )
-                    Text(
-                        text = "$percentage%",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = TextDark
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Text(
-                    text = "You scored $correct out of $total",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color.Gray
-                )
-
-                Spacer(modifier = Modifier.height(40.dp))
-
-                Button(
-                    onClick = onRestart,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = MorphTeal),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("Try Again", color = Color.White)
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                OutlinedButton(
-                    onClick = onBackToHome,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MorphTeal)
-                ) {
-                    Text("Back to Home")
-                }
-            }
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun FillBlankScreenPreview() {
-    FillBlankContent(
-        isLoading = false,
-        isFinished = false,
-        errorMessage = null,
-        subjectName = "Introduction to Android",
-        currentQuestionIndex = 0,
-        totalQuestions = 5,
-        currentQuestion = FillBlank("_ is the primary color of MorphLearn.", "Teal"),
-        userAnswer = "",
-        isAnswered = false,
-        isCorrect = false,
-        correctCount = 0,
-        onBackToLibrary = {},
-        onBackToHome = {},
-        onUserAnswerChange = {},
-        onSubmitAnswer = {},
-        onNextQuestion = {},
-        onRestart = {}
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun FillBlankResultPreview() {
-    FillBlankResultScreen(
-        correct = 4,
-        total = 5,
-        onBackToHome = {},
-        onRestart = {}
-    )
 }
