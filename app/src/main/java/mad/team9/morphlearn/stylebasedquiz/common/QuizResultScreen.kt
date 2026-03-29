@@ -1,4 +1,4 @@
-package mad.team9.morphlearn.stylebasedquiz.kinesthetic
+package mad.team9.morphlearn.stylebasedquiz.common
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -9,7 +9,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -18,7 +17,8 @@ import androidx.compose.ui.unit.sp
 fun QuizResultScreen(
     score: Int,
     totalQuestions: Int,
-    onDone: () -> Unit
+    onDone: () -> Unit,
+    onRestart: (() -> Unit)? = null
 ) {
     val percentage = if (totalQuestions > 0) (score.toDouble() / totalQuestions * 100).toInt() else 0
 
@@ -78,6 +78,21 @@ fun QuizResultScreen(
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))
+
+                if (onRestart != null) {
+                    Button(
+                        onClick = onRestart,
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondary,
+                            contentColor = MaterialTheme.colorScheme.onSecondary
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Try Again")
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
 
                 Button(
                     onClick = onDone,

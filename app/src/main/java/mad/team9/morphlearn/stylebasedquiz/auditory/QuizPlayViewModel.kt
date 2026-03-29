@@ -1,4 +1,4 @@
-package mad.team9.morphlearn.stylebasedquiz
+package mad.team9.morphlearn.stylebasedquiz.auditory
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -6,6 +6,11 @@ import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import mad.team9.morphlearn.stylebasedquiz.common.QuizAnswerFeedbackControl
+import mad.team9.morphlearn.stylebasedquiz.common.QuizFetchRepository
+import mad.team9.morphlearn.stylebasedquiz.common.QuizQuestion
+import mad.team9.morphlearn.stylebasedquiz.common.QuizResult
+import mad.team9.morphlearn.stylebasedquiz.common.QuizResultRepository
 
 data class QuizPlayState(
     val loading: Boolean = false,
@@ -14,18 +19,9 @@ data class QuizPlayState(
     val materialId: String = "",
     val questions: List<QuizQuestion> = emptyList(),
     val index: Int = 0,
-
-    // Selected answers for each question (-1 = not answered)
     val selectedAnswers: List<Int> = emptyList(),
-
-    // whether current question has been confirmed
     val confirmed: Boolean = false,
-
-    // correctness for current question after confirm
     val lastAnswerCorrect: Boolean? = null,
-
-
-    // Final result
     val finalScore: Int? = null,
     val finished: Boolean = false
 )
@@ -43,7 +39,6 @@ class QuizPlayViewModel(
         viewModelScope.launch {
             try {
                 _state.value = QuizPlayState(loading = true, quizId = quizId)
-
                 val questions = fetchRepo.getQuizQuestions(quizId)
                 val meta = fetchRepo.getAllQuizzes().firstOrNull { it.quizId == quizId }
                 val selections = List(questions.size) { -1 }
@@ -68,17 +63,13 @@ class QuizPlayViewModel(
 
     fun selectAnswer(selectedIndex: Int) {
         val s = _state.value
-        if (s.finished) return
-        if (s.confirmed) return               // ✅ lock after confirm
-        if (s.questions.isEmpty()) return
-        if (s.index !in s.questions.indices) return
+        if (s.finished || s.confirmed || s.questions.isEmpty() || s.index !in s.questions.indices) return
 
         val updated = s.selectedAnswers.toMutableList()
         updated[s.index] = selectedIndex
         _state.value = s.copy(selectedAnswers = updated)
     }
 
-    // NEW: confirm current answer (compute correctness, lock)
     fun confirmAnswer() {
         val s = _state.value
         val q = s.questions.getOrNull(s.index) ?: return
@@ -91,7 +82,7 @@ class QuizPlayViewModel(
 
     fun nextOrFinish(topic: String) {
         val s = _state.value
-        if (!s.confirmed) return              // ✅ must confirm before next
+        if (!s.confirmed) return
 
         val next = s.index + 1
         val done = next >= s.questions.size
@@ -105,10 +96,7 @@ class QuizPlayViewModel(
                         s.questions[i].correctIndex
                     )
                 }
-
                 val uid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-                
-                // NEW: Get the dynamic attempt count
                 val nextAttempt = resultRepo.getNextAttemptNumber(uid, s.materialId)
                 
                 val result = QuizResult(
@@ -121,26 +109,18 @@ class QuizPlayViewModel(
                     attemptNumber = nextAttempt
                 )
                 resultRepo.saveQuizAttempt(result, topic)
-
                 _state.value = s.copy(finished = true, finalScore = score)
             }
         } else {
-            _state.value = s.copy(
-                index = next,
-                confirmed = false,
-                lastAnswerCorrect = null
-            )
+            _state.value = s.copy(index = next, confirmed = false, lastAnswerCorrect = null)
         }
     }
 
     fun submitFinalScore(score: Int, topic: String) {
         val s = _state.value
-
         viewModelScope.launch {
             val uid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-
             val nextAttempt = resultRepo.getNextAttemptNumber(uid, s.materialId)
-
             val result = QuizResult(
                 userId = uid,
                 quizId = s.quizId,
@@ -150,13 +130,8 @@ class QuizPlayViewModel(
                 userAnswers = emptyList(),
                 attemptNumber = nextAttempt
             )
-
             resultRepo.saveQuizAttempt(result, topic)
-
-            _state.value = s.copy(
-                finished = true,
-                finalScore = score
-            )
+            _state.value = s.copy(finished = true, finalScore = score)
         }
     }
 }

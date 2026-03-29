@@ -1,4 +1,4 @@
-package mad.team9.morphlearn.stylebasedquiz
+package mad.team9.morphlearn.stylebasedquiz.common
 
 import android.util.Log
 import com.google.firebase.firestore.FieldValue
@@ -11,17 +11,10 @@ class QuizResultRepository(
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) {
 
-    /**
-     * Validate answers
-     * Compares user selection to AI answers.
-     */
     fun isAnswerCorrect(selectedOptionIndex: Int, question: AIQuizQuestion): Boolean {
         return selectedOptionIndex == question.correctIndex
     }
 
-    /**
-     * Fetches the next attempt number for a specific material for a given user.
-     */
     suspend fun getNextAttemptNumber(userId: String, materialId: String): Int {
         return try {
             val countQuery = db.collection("Users")
@@ -38,12 +31,7 @@ class QuizResultRepository(
         }
     }
 
-    /**
-     * Store quiz attempt results
-     * Takes the QuizResult object and converts it to a Map to use server timestamps.
-     */
     fun saveQuizAttempt(result: QuizResult, topic: String) {
-        // Mapping the data class to a HashMap for Firestore
         val attemptData = hashMapOf(
             "userId" to result.userId,
             "quizId" to result.quizId,
@@ -57,8 +45,8 @@ class QuizResultRepository(
         )
 
         db.collection("Users")
-            .document(result.userId)        // Look for the specific user
-            .collection("QuizAttempts")    // Create/Add to their personal attempts list
+            .document(result.userId)
+            .collection("QuizAttempts")
             .add(attemptData)
             .addOnSuccessListener { Log.d("QuizResultRepo", "Saved to user's profile!") }
             .addOnFailureListener { e -> Log.e("QuizResultRepo", "Save failed", e) }

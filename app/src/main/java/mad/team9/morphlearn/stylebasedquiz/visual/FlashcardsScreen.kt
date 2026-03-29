@@ -94,7 +94,7 @@ fun FlashcardsScreen(
                 val answeredCount = viewModel.userAnswersMap.size
                 val totalCount = answeredCount + viewModel.activeCards.size
                 val progress = if (totalCount > 0) answeredCount.toFloat() / totalCount else 0f
-                
+
                 LinearProgressIndicator(
                     progress = { progress },
                     modifier = Modifier
@@ -104,7 +104,7 @@ fun FlashcardsScreen(
                     color = MorphTeal,
                     trackColor = Color.LightGray.copy(alpha = 0.3f)
                 )
-                
+
                 Text(
                     text = "${viewModel.activeCards.size} cards remaining",
                     style = MaterialTheme.typography.labelLarge,
@@ -166,7 +166,7 @@ fun FlashcardsScreen(
                             }
                         }
                     }
-                    
+
                     if (!viewModel.isAnswerRevealed && !viewModel.isLoading) {
                         Text(
                             text = "Tap the card to see the answer",
@@ -287,7 +287,7 @@ fun FlashcardsResultScreen(
     onBackToHome: () -> Unit
 ) {
     val percentage = if (total > 0) (correct.toFloat() / total * 100).toInt() else 0
-    
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -312,9 +312,9 @@ fun FlashcardsResultScreen(
                     fontWeight = FontWeight.Bold,
                     color = TextDark
                 )
-                
+
                 Spacer(modifier = Modifier.height(32.dp))
-                
+
                 Box(contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(
                         progress = { 1f },
@@ -342,18 +342,18 @@ fun FlashcardsResultScreen(
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(32.dp))
-                
+
                 Text(
                     text = "You got $correct out of $total flashcards correct.",
                     style = MaterialTheme.typography.bodyLarge,
                     textAlign = TextAlign.Center,
                     color = Color.Gray
                 )
-                
+
                 Spacer(modifier = Modifier.height(40.dp))
-                
+
                 Button(
                     onClick = onBackToHome,
                     modifier = Modifier

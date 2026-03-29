@@ -1,4 +1,4 @@
-package mad.team9.morphlearn.stylebasedquiz
+package mad.team9.morphlearn.stylebasedquiz.common
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -15,7 +15,6 @@ class QuizFetchRepository(
         val snap = db.collection("Users")
             .document(uid())
             .collection("Quizzes")
-
             .get()
             .await()
 
@@ -53,6 +52,7 @@ class QuizFetchRepository(
             )
         }
     }
+
     suspend fun getQuizIdByMaterialId(materialId: String): String? {
         val snap = db.collection("Users")
             .document(uid())

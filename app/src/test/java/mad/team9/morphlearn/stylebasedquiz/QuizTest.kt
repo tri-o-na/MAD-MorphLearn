@@ -10,6 +10,8 @@ import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import mad.team9.morphlearn.ai.AIQuizQuestion
+import mad.team9.morphlearn.stylebasedquiz.common.QuizResultRepository
+import mad.team9.morphlearn.stylebasedquiz.common.QuizViewModel
 import org.junit.Test
 import kotlinx.coroutines.test.runTest
 

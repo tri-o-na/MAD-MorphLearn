@@ -105,7 +105,7 @@ fun FillBlankContent(
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { 
+                    title = {
                         Column {
                             Text("Fill in the Blank", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                             if (subjectName != null) {

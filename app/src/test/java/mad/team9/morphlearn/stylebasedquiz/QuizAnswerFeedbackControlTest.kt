@@ -2,6 +2,7 @@ package mad.team9.morphlearn.stylebasedquiz
 
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
+import mad.team9.morphlearn.stylebasedquiz.common.QuizAnswerFeedbackControl
 import org.junit.Test
 
 class QuizAnswerFeedbackControlTest {

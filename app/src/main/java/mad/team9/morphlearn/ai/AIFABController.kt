@@ -4,15 +4,18 @@ import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -27,6 +30,7 @@ import androidx.compose.material.icons.filled.Description
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -115,31 +119,15 @@ fun AIFloatingActionButton(
                        showUploadModal = false
                        showConfigureModal = false
 
-                       // Insert Upload logic
-                       scope.launch {
-                           aiNotesViewModel.startLoading()
-                           try{
-                               // Get Subject Id
-                               val subjectId = aiNotesViewModel.getOrCreateSubject(subject)
-
-                               // Get AI response
-                               val responseJson = uploadPDFToAI(context,selectedUri!!, FirebaseAuthManager.getLearningStyle())
-
-                               // Inject Subject id into response json
-                               val editResponse = JSONObject(responseJson).apply {
-                                   put("subjectId", subjectId)
-                                   if (topic.isNotEmpty()) put("title", topic)
-                               }
-
-                               // Update viewModel
-                               aiNotesViewModel.setResponse(editResponse.toString())
-                               navController.navigate("ai-response-PDF")
-
-                           } catch (e: Exception){
-                               Toast.makeText(context,"Error: ${e.message}", Toast.LENGTH_LONG).show()
-                           } finally {
-                               aiNotesViewModel.endLoading()
-                           }
+                       try {
+                           aiNotesViewModel.generateNotesAndQuiz(
+                               subject,
+                               topic,
+                               context,
+                               selectedUri!!
+                           )
+                       } catch (e: Exception) {
+                           Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
                        }
                    }
                )
@@ -389,4 +377,30 @@ fun getFileName(context: Context, uri: Uri): String? {
     }
 
     return result
+}
+
+@Composable
+fun AILoadingScreen(){
+    BackHandler(true) { }
+    Surface(modifier = Modifier.fillMaxSize(), color = Color.Black.copy(alpha = 0.6f)) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ){
+            CircularProgressIndicator(color = Color.White, strokeWidth = 4.dp)
+            Spacer(modifier= Modifier.height(16.dp))
+            Text(
+                text="AI is analyzing...",
+                color = Color.White,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "This may take a minute",
+                color = Color.White.copy(alpha = 0.7f),
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+    }
 }

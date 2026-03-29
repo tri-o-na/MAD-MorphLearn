@@ -46,12 +46,14 @@ import androidx.navigation.navArgument
 import kotlinx.coroutines.launch
 import com.google.firebase.firestore.FirebaseFirestore
 import mad.team9.morphlearn.ai.AIFloatingActionButton
-import mad.team9.morphlearn.ai.AIGeneratedNotes
+import mad.team9.morphlearn.ai.AILoadingScreen
 import mad.team9.morphlearn.ai.AINotesRepository
 import mad.team9.morphlearn.ai.AINotesViewModel
+import mad.team9.morphlearn.ai.AIQuizService
 import java.net.URLEncoder
 import mad.team9.morphlearn.onboardingQuiz.OnboardingQuizScreen
 import mad.team9.morphlearn.login.FirebaseAuthManager
+import mad.team9.morphlearn.notes.NotesViewModel
 
 @Composable
 fun MorphLearnApp(
@@ -64,12 +66,15 @@ fun MorphLearnApp(
 
     val firestore = FirebaseFirestore.getInstance()
     val repository = remember { AINotesRepository(firestore) }
+    val quizService = remember { AIQuizService(repository) }
 
-    // Create Ai viewmodel to use for AI Upload PDF page and AI Generated Notes page
     val aiNotesViewModel: AINotesViewModel = viewModel(
-        factory = object : ViewModelProvider.Factory{
-            override fun<T: ViewModel> create(modelClass: Class<T>): T{
-                return AINotesViewModel(repository) as T
+        factory = object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                if (modelClass.isAssignableFrom(AINotesViewModel::class.java)) {
+                    return AINotesViewModel(quizService) as T
+                }
+                throw IllegalArgumentException("Unknown ViewModel class")
             }
         }
     )
@@ -77,7 +82,7 @@ fun MorphLearnApp(
     // Define which screens should show navigation elements
     val bottomBarRoutes = listOf("home", "profile", "notes")
     val shouldShowBottomBar = route in bottomBarRoutes
-    val showAIFAB = route == "home"
+    val showAIFAB = route == "home" || route == "notes" || route == "profile"
 
     // Track the current user and their quiz status
     val currentUser = remember { FirebaseAuth.getInstance().currentUser }
@@ -264,6 +269,7 @@ fun MorphLearnApp(
                         arguments = listOf(navArgument("materialId") { type = NavType.StringType })
                     ) {
                         val materialId = it.arguments?.getString("materialId") ?: ""
+                        val notesViewModel: NotesViewModel = viewModel()
 
                         NoteDetailsScreen(
                             materialId = materialId,
@@ -274,7 +280,9 @@ fun MorphLearnApp(
                                 navController.navigate("quizPlay/$encQuizId/$encTopic")
                             },
                             onRegenerateQuiz = { materialId ->
-                                aiNotesViewModel.regenerateQuiz(materialId)
+                                aiNotesViewModel.regenerateQuiz(materialId) {
+                                    notesViewModel.initializeNoteData(materialId)
+                                }
                             },
                         )
                     }
@@ -304,13 +312,6 @@ fun MorphLearnApp(
                     composable("profile") {
                         ProfileScreen()
                     }
-
-                    composable(
-                        route = "ai-response-PDF",
-                    ) {
-                        AIGeneratedNotes(navController, aiNotesViewModel)
-                    }
-
                     composable("library") {
                         Text("Library Screen coming soon", modifier = Modifier.padding(16.dp))
                     }
@@ -318,28 +319,7 @@ fun MorphLearnApp(
             }
 
             if (aiNotesViewModel.isLoading) {
-                BackHandler(true) { }
-                Surface(modifier = Modifier.fillMaxSize(), color = Color.Black.copy(alpha = 0.6f)) {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ){
-                        CircularProgressIndicator(color = Color.White, strokeWidth = 4.dp)
-                        Spacer(modifier= Modifier.height(16.dp))
-                        Text(
-                            text="AI is analyzing...",
-                            color = Color.White,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = "This may take a minute",
-                            color = Color.White.copy(alpha = 0.7f),
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                }
+                AILoadingScreen()
             }
         }
     }
