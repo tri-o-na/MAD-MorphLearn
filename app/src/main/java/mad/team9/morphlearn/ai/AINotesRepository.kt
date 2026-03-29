@@ -169,8 +169,8 @@ class AINotesRepository(
         val quizData = quizRef.toObject(AIQuiz::class.java) ?: return emptyList()
         val questions = quizData.questions
 
-        return questions.filterIndexed { index, questionObj ->
-            index < userAnswers.size && userAnswers[index] != questionObj.correctIndex
+        return questions.filterIndexed { index, _ ->
+            index < userAnswers.size && userAnswers[index] == 0 // Return only the questions that are marked as incorrect
         }.map { it.question }
     }
 

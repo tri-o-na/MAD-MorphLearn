@@ -1,5 +1,6 @@
 package mad.team9.morphlearn.notes
 
+import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -90,6 +91,8 @@ class MaterialsRepository(
     }
 
     override suspend fun checkQuizAttempt(quizId: String?): Boolean {
+        Log.d("CHECKQUIZATTEMPT", "checkQuizAttempt called with quizId: $quizId")
+
         val snapshot = db.collection("Users")
             .document(uid())
             .collection("QuizAttempts")
@@ -102,6 +105,7 @@ class MaterialsRepository(
         // if no documents, return false. else return true
         if (snapshot.isEmpty) return false
 
+        Log.d("CHECKQUIZATTEMPT", "checkQuizAttempt returned true")
         return true
     }
 

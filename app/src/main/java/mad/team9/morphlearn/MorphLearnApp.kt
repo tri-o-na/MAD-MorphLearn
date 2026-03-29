@@ -1,5 +1,6 @@
 package mad.team9.morphlearn
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -287,6 +288,7 @@ fun MorphLearnApp(
                             materialId = materialId,
                             onBack = { navController.popBackStack() },
                             onTakeQuiz = { quizId, topicTitle ->
+                                Log.d("TAKE_QUIZ", "Taking quiz with ID: $quizId")
                                 val encQuizId = URLEncoder.encode(quizId, "UTF-8")
                                 val encTopic = URLEncoder.encode(topicTitle, "UTF-8")
                                 navController.navigate("quizPlay/$encQuizId/$encTopic")

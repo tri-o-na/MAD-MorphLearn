@@ -6,6 +6,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import android.content.Context
 import android.net.Uri
 import android.util.Base64
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mad.team9.morphlearn.BuildConfig
@@ -29,37 +30,41 @@ suspend fun uploadPDFToAI(
 
     val base64pdf = Base64.encodeToString(pdfBytes, Base64.NO_WRAP)
 
+    val prompt = """
+        Generate study notes from the provided PDF.
+        Return the result in the following JSON format:
+        {
+            "title": "<a title for the study notes>",
+            "generatedNotes": "<well-structured notes>"
+            "questions": [
+                {
+                    "question": "<question text>",
+                    "options": [<array of strings based on the style rules>],
+                    "correctIndex": <number>
+                }
+            ]
+        }
+                            
+        This is the type of question you should generate:
+        $userQuestionStyle 
+        
+        Rules:
+        1. Do NOT include markdown
+        2. Do NOT include explanations
+        3. Do Not wrap the JSON in backticks
+        4. Return ONLY the JSON object
+        5. Do NOT add or modify the JSON keys
+        6. Ensure correctIndex must match one option index
+        """.trimIndent()
+
+    Log.d("AIPrompt", "uploadPDFToAI called. Prompt: $prompt")
+
     val json = JSONObject().apply {
         put("contents", JSONArray().put(
             JSONObject().apply {
                 put("parts", JSONArray().apply {
                     put(JSONObject().apply {
-                        put("text","""
-                           Generate study notes from the provided PDF.
-                           Return the result in the following JSON format:
-                            {
-                                "title": "<a title for the study notes>",
-                                "generatedNotes": "<well-structured notes>"
-                                "questions": [
-                                    {
-                                        "question": "<question text>",
-                                        "options": [<array of strings based on the style rules>],
-                                        "correctIndex": <number>
-                                    }
-                                ]
-                            }
-                            
-                           This is the type of question you should generate:
-                           $userQuestionStyle 
-                            
-                           Rules:
-                           1. Do NOT include markdown
-                           2. Do NOT include explanations
-                           3. Do Not wrap the JSON in backticks
-                           4. Return ONLY the JSON object
-                           5. Do NOT add or modify the JSON keys
-                           6. Ensure correctIndex must match one option index
-                        """)
+                        put("text", prompt)
                     })
 
                     put(JSONObject().apply {
@@ -140,6 +145,8 @@ suspend fun generateNewQuiz(weakQuestions: List<String>, notes: String, learnerT
         
     """.trimIndent()
 
+    Log.d("AIPrompt", "generateNewQuiz called. Prompt: $prompt")
+
     val requestBodyJson = JSONObject().apply {
         val contentsArray = JSONArray().apply {
             put(JSONObject().apply {
@@ -193,6 +200,7 @@ fun questionStyleType(learnerType: String): String{
         "AUDITORY" -> """
             - FORMAT: MCQ Questions
             - RULE: Standard MCQ with exactly 4 options.
+            - RULE: Ensure correctIndex is relatively spread between the 4 options
         """.trimIndent()
         "READ_WRITE" -> """
             - FORMAT: Fill-in-the-blank.

@@ -2,6 +2,7 @@ package mad.team9.morphlearn.stylebasedquiz.common
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
 
 class QuizFetchRepository(
@@ -58,6 +59,7 @@ class QuizFetchRepository(
             .document(uid())
             .collection("Quizzes")
             .whereEqualTo("materialId", materialId)
+            .orderBy("timestamp", Query.Direction.DESCENDING)
             .limit(1)
             .get()
             .await()
