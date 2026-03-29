@@ -9,6 +9,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mad.team9.morphlearn.notes.MaterialsRepository
 import mad.team9.morphlearn.stylebasedquiz.common.QuizFetchRepository
@@ -104,32 +105,39 @@ class FlashcardsViewModel(
 
     /**
      * Called when user marks a card as Correct or Wrong.
-     * Removes the card from the active deck and records the result by its original index.
+     * Records the answer and initiates a flip-back animation before moving to the next card.
      */
     fun onAnswered(isCorrect: Boolean) {
         val currentWrapper = activeCards.getOrNull(currentCardIndex) ?: return
 
-        // Record the answer: 1 for correct, 0 for wrong, indexed by original question order
+        // Record the answer immediately
         userAnswersMap[currentWrapper.originalIndex] = if (isCorrect) 1 else 0
 
         if (isCorrect) {
             correctCount++
         }
 
-        // Reset reveal state BEFORE moving to next card to prevent showing answer on next card
+        // Start flip back animation
         isAnswerRevealed = false
 
-        // Remove from current session queue
-        activeCards.removeAt(currentCardIndex)
+        // Delay removing the card to allow the flip animation to hide the content
+        viewModelScope.launch {
+            // Wait for approximately half of the 500ms animation (the 90-degree point)
+            delay(150)
 
-        if (activeCards.isEmpty()) {
-            isFinished = true
-            saveAttempt()
-        } else {
-            // After removal, currentCardIndex now points to what was the next card.
-            // If we removed the last item in the list, wrap back to the start.
-            if (currentCardIndex >= activeCards.size) {
-                currentCardIndex = 0
+            // Remove from current session queue
+            if (activeCards.isNotEmpty() && currentCardIndex < activeCards.size) {
+                activeCards.removeAt(currentCardIndex)
+
+                if (activeCards.isEmpty()) {
+                    isFinished = true
+                    saveAttempt()
+                } else {
+                    // After removal, currentCardIndex now points to what was the next card.
+                    if (currentCardIndex >= activeCards.size) {
+                        currentCardIndex = 0
+                    }
+                }
             }
         }
     }
@@ -139,10 +147,21 @@ class FlashcardsViewModel(
      */
     fun skipCard() {
         if (activeCards.size > 1) {
+            val wasRevealed = isAnswerRevealed
             isAnswerRevealed = false
-            val card = activeCards.removeAt(currentCardIndex)
-            activeCards.add(card)
-            // currentCardIndex stays the same, so the UI shows the card that was immediately behind.
+            
+            if (wasRevealed) {
+                viewModelScope.launch {
+                    delay(250)
+                    if (activeCards.size > 1 && currentCardIndex < activeCards.size) {
+                        val card = activeCards.removeAt(currentCardIndex)
+                        activeCards.add(card)
+                    }
+                }
+            } else {
+                val card = activeCards.removeAt(currentCardIndex)
+                activeCards.add(card)
+            }
         } else if (activeCards.size == 1) {
             isAnswerRevealed = false
         }
