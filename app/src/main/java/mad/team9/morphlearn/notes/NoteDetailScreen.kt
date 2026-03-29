@@ -69,6 +69,8 @@ fun NoteDetailsScreen(
     val isAuditoryLearner = learningStyle?.trim()?.uppercase() == "AUDITORY"
 
     val isLoadingCompleted by viewModel.isLoadingCompleted.collectAsState()
+    val canTakeQuiz by viewModel.canTakeQuiz.collectAsState()
+
 
     LaunchedEffect(Unit) {
         viewModel.initializeNoteData(materialId)
@@ -202,10 +204,10 @@ fun NoteDetailsScreen(
                         "No quiz found for materialId=$materialId"
                     )
                 },
-                enabled = isLoadingCompleted,
+                enabled = canTakeQuiz,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f),
+                    .weight(2f),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MorphTeal,
                     contentColor = Color.White
@@ -224,13 +226,13 @@ fun NoteDetailsScreen(
                 enabled = hasAttemptedQuiz,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f),
+                    .weight(1.5f),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MorphTeal,
                     contentColor = Color.White
                 )
             ) {
-                Text("Regenerate Quiz")
+                Text("Regenerate Quiz", textAlign = TextAlign.Center)
             }
 
         }

@@ -119,31 +119,15 @@ fun AIFloatingActionButton(
                        showUploadModal = false
                        showConfigureModal = false
 
-                       // Insert Upload logic
-                       scope.launch {
-                           aiNotesViewModel.startLoading()
-                           try{
-                               // Get Subject Id
-                               val subjectId = aiNotesViewModel.getOrCreateSubject(subject)
-
-                               // Get AI response
-                               val responseJson = uploadPDFToAI(context,selectedUri!!, FirebaseAuthManager.getLearningStyle())
-
-                               // Inject Subject id into response json
-                               val editResponse = JSONObject(responseJson).apply {
-                                   put("subjectId", subjectId)
-                                   if (topic.isNotEmpty()) put("title", topic)
-                               }
-
-                               // Update viewModel
-                               aiNotesViewModel.setResponse(editResponse.toString())
-                               navController.navigate("ai-response-PDF")
-
-                           } catch (e: Exception){
-                               Toast.makeText(context,"Error: ${e.message}", Toast.LENGTH_LONG).show()
-                           } finally {
-                               aiNotesViewModel.endLoading()
-                           }
+                       try {
+                           aiNotesViewModel.generateNotesAndQuiz(
+                               subject,
+                               topic,
+                               context,
+                               selectedUri!!
+                           )
+                       } catch (e: Exception) {
+                           Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
                        }
                    }
                )

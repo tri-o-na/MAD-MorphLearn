@@ -9,7 +9,7 @@ import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import mad.team9.morphlearn.ai.MainDispatcherRule
+import mad.team9.morphlearn.MainDispatcherRule
 import mad.team9.morphlearn.notes.Material
 import mad.team9.morphlearn.notes.MaterialsRepository
 import mad.team9.morphlearn.stylebasedquiz.common.QuizFetchRepository

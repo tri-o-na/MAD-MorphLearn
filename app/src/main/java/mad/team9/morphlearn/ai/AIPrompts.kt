@@ -6,7 +6,6 @@ import okhttp3.MediaType.Companion.toMediaType
 import android.content.Context
 import android.net.Uri
 import android.util.Base64
-import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mad.team9.morphlearn.BuildConfig
@@ -189,6 +188,7 @@ fun questionStyleType(learnerType: String): String{
             - RULE: ONLY PROVIDE 1 OPTION Per question. 
             - RULE: Provide only the correct answer in the options array.
             - RULE: Set 'correctIndex' to 0.
+            - RULE: Ensure there is 12 generated questions
         """.trimIndent()
         "AUDITORY" -> """
             - FORMAT: MCQ Questions
