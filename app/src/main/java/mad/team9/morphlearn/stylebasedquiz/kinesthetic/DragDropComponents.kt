@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import mad.team9.morphlearn.ui.theme.*
 import kotlin.math.roundToInt
 
 @Composable
@@ -78,14 +79,14 @@ fun DraggableAnswer(
             }
             .padding(4.dp),
         shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.surface,
-        contentColor = MaterialTheme.colorScheme.onSurface,
+        color = Color.White,
+        contentColor = TextDark,
         border = BorderStroke(
             1.dp,
             when {
-                !enabled -> MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
-                isDragging -> MaterialTheme.colorScheme.primary
-                else -> MaterialTheme.colorScheme.outline
+                !enabled -> Color.Gray.copy(alpha = 0.5f)
+                isDragging -> MorphTeal
+                else -> Color.LightGray
             }
         ),
         shadowElevation = if (isDragging) 8.dp else 2.dp
@@ -102,12 +103,13 @@ fun DraggableAnswer(
 }
 
 @Composable
-fun QuestionSlot(state: DropTargetState,
-                 enabled: Boolean,
-                 backgroundColor: Color,
-                 borderColor: Color) {
+fun QuestionSlot(
+    state: DropTargetState,
+    enabled: Boolean,
+    backgroundColor: Color,
+    borderColor: Color
+) {
     val isFilled = state.currentAnswer != null
-    val primaryColor = MaterialTheme.colorScheme.primary
 
     ElevatedCard(
         modifier = Modifier
@@ -115,24 +117,13 @@ fun QuestionSlot(state: DropTargetState,
             .padding(vertical = 8.dp)
             .onGloballyPositioned { layoutCoordinates ->
                 state.screenBounds = layoutCoordinates.boundsInWindow()
-            }
-            .border(
-                width = if (enabled) {
-                    if (isFilled) 2.dp else 1.dp
-                } else 2.dp,
-                color = if (enabled && isFilled) primaryColor else borderColor,
-                shape = RoundedCornerShape(16.dp)
-            ),
+            },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.elevatedCardColors(
-            containerColor = if (enabled) {
-                if (isFilled) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f) 
-                else MaterialTheme.colorScheme.surface
-            } else {
-                backgroundColor
-            },
-            contentColor = MaterialTheme.colorScheme.onSurface
-        )
+            containerColor = Color.White,
+            contentColor = TextDark
+        ),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier
@@ -143,12 +134,7 @@ fun QuestionSlot(state: DropTargetState,
             Text(
                 text = state.questionText, 
                 style = MaterialTheme.typography.bodyMedium,
-                color = when {
-                    !enabled && borderColor == Color(0xFF2E7D32) -> Color(0xFF2E7D32)
-                    !enabled && borderColor == Color(0xFFC62828) -> Color(0xFFC62828)
-                    isFilled -> primaryColor
-                    else -> MaterialTheme.colorScheme.onSurface
-                }
+                color = if (!enabled && borderColor != Color.LightGray) borderColor else TextDark
             )
             
             Box(
@@ -157,15 +143,15 @@ fun QuestionSlot(state: DropTargetState,
                     .heightIn(min = 48.dp)
                     .background(
                         color = if (!enabled) backgroundColor 
-                                else if (isFilled) MaterialTheme.colorScheme.surface 
-                                else MaterialTheme.colorScheme.surfaceVariant,
+                                else if (isFilled) Color.White 
+                                else BackgroundGray.copy(alpha = 0.5f),
                         shape = RoundedCornerShape(8.dp)
                     )
                     .border(
-                        width = 1.dp,
+                        width = if (isFilled) 2.dp else 1.dp,
                         color = if (!enabled) borderColor 
-                                else if (isFilled) primaryColor 
-                                else MaterialTheme.colorScheme.outline,
+                                else if (isFilled) MorphTeal 
+                                else Color.LightGray,
                         shape = RoundedCornerShape(8.dp)
                     )
                     .padding(12.dp),
@@ -174,12 +160,7 @@ fun QuestionSlot(state: DropTargetState,
                 Text(
                     text = state.currentAnswer ?: "Drag answer here",
                     style = MaterialTheme.typography.bodySmall,
-                    color = when {
-                        !enabled && borderColor == Color(0xFF2E7D32) -> Color(0xFF2E7D32)
-                        !enabled && borderColor == Color(0xFFC62828) -> Color(0xFFC62828)
-                        isFilled -> primaryColor
-                        else -> MaterialTheme.colorScheme.onSurfaceVariant
-                    },
+                    color = if (isFilled) MorphTeal else Color.Gray,
                     fontWeight = if (isFilled) FontWeight.Bold else FontWeight.Normal,
                     textAlign = TextAlign.Center
                 )

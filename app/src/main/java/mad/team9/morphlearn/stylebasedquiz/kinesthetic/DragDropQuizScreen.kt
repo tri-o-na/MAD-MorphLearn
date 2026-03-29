@@ -14,6 +14,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import mad.team9.morphlearn.stylebasedquiz.common.QuizQuestion
 import mad.team9.morphlearn.stylebasedquiz.common.QuizResultScreen
+import mad.team9.morphlearn.stylebasedquiz.common.QuizAnswerFeedbackControl
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -25,15 +26,15 @@ fun DragDropQuizScreen(
 ) {
     var isFinished by remember { mutableStateOf(false) }
     var finalScore by remember { mutableStateOf(0) }
-    
+
     // Page state to limit to 3 questions
     var currentPage by remember { mutableStateOf(0) }
     val pageSize = 3
-    
+
     // confirm state so user must confirm before going next
     var confirmed by remember { mutableStateOf(false) }
 
-    val feedbackControl = remember { mad.team9.morphlearn.stylebasedquiz.common.QuizAnswerFeedbackControl() }
+    val feedbackControl = remember { QuizAnswerFeedbackControl() }
 
     // Track total user answers across pages - using remember with questions as key
     val allDropTargets = remember(questions) {
@@ -45,7 +46,7 @@ fun DragDropQuizScreen(
             )
         }
     }
-    
+
     val currentTargets = allDropTargets.drop(currentPage * pageSize).take(pageSize)
     val currentQuestions = questions.drop(currentPage * pageSize).take(pageSize)
 
@@ -92,9 +93,14 @@ fun DragDropQuizScreen(
                 )
             }
         } else {
-            // Shuffle answers per page
-            val availableAnswers = remember(currentPage, currentQuestions) {
+            // Shuffle answers per page but keep them stable
+            val shuffledAnswers = remember(currentPage, currentQuestions) {
                 currentQuestions.map { it.options[it.correctIndex] }.shuffled()
+            }
+            
+            // Filter out answers that are already placed in ANY box
+            val availableAnswers = shuffledAnswers.filter { answer ->
+                allDropTargets.none { it.currentAnswer == answer }
             }
 
             Column(
@@ -112,7 +118,6 @@ fun DragDropQuizScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 LazyColumn(modifier = Modifier.weight(1f)) {
-                    // ADDED KEY: This ensures each question slot refreshes its position on page change
                     items(currentTargets, key = { it.questionId }) { target ->
                         val isCorrect = if (confirmed) {
                             feedbackControl.isDragDropAnswerCorrect(
@@ -132,35 +137,45 @@ fun DragDropQuizScreen(
                     }
                 }
 
-                Text(
-                    text = "Answer Bank", 
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                if (availableAnswers.isNotEmpty()) {
+                    Text(
+                        text = "Answer Bank",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(top = 16.dp)
+                    )
 
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    availableAnswers.forEach { answer ->
-                        key(answer + currentPage) {
-                            DraggableAnswer(
-                                content = answer,
-                                dropTargets = currentTargets,
-                                enabled = !confirmed,
-                                onMatchFound = { target, matchedValue ->
-                                    if (!confirmed) {
-                                        target.currentAnswer = matchedValue
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        availableAnswers.forEach { answer ->
+                            key(answer + currentPage) {
+                                DraggableAnswer(
+                                    content = answer,
+                                    dropTargets = currentTargets,
+                                    enabled = !confirmed,
+                                    onMatchFound = { target, matchedValue ->
+                                        if (!confirmed) {
+                                            target.currentAnswer = matchedValue
+                                        }
                                     }
-                                }
-                            )
+                                )
+                            }
                         }
                     }
+                } else {
+                    Text(
+                        text = "All answers placed",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(vertical = 16.dp).align(Alignment.CenterHorizontally)
+                    )
                 }
 
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     if (currentPage > 0) {
@@ -171,10 +186,7 @@ fun DragDropQuizScreen(
                                 }
                             },
                             modifier = Modifier.weight(1f).height(56.dp),
-                            enabled = !confirmed,
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = MaterialTheme.colorScheme.primary
-                            )
+                            enabled = !confirmed
                         ) {
                             Text("Previous")
                         }
@@ -201,10 +213,7 @@ fun DragDropQuizScreen(
                             }
                         },
                         modifier = Modifier.weight(1f).height(56.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        )
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
                         Text(
                             when {
@@ -219,4 +228,3 @@ fun DragDropQuizScreen(
         }
     }
 }
-
