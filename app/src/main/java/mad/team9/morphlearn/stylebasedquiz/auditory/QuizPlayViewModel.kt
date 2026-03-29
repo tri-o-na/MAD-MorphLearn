@@ -89,23 +89,25 @@ class QuizPlayViewModel(
 
         if (done) {
             viewModelScope.launch {
-                val answers = s.selectedAnswers
-                val score = s.questions.indices.count { i ->
-                    feedbackControl.isMcqAnswerCorrect(
-                        answers.getOrElse(i) { -1 },
+                val answerResults = s.questions.indices.map { i ->
+                    val isCorrect = feedbackControl.isMcqAnswerCorrect(
+                        s.selectedAnswers.getOrElse(i) { -1 },
                         s.questions[i].correctIndex
                     )
+                    if (isCorrect) 1 else 0
                 }
+
+                val score = answerResults.sum()
                 val uid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
                 val nextAttempt = resultRepo.getNextAttemptNumber(uid, s.materialId)
-                
+
                 val result = QuizResult(
                     userId = uid,
                     quizId = s.quizId,
                     materialId = s.materialId,
                     score = score,
                     totalQuestions = s.questions.size,
-                    userAnswers = answers,
+                    userAnswers = answerResults,
                     attemptNumber = nextAttempt
                 )
                 resultRepo.saveQuizAttempt(result, topic)
