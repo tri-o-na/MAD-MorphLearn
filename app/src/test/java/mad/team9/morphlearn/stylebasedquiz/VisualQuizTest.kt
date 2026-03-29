@@ -70,7 +70,7 @@ class VisualQuizTest {
 
         assertEquals(2, viewModel.activeCards.size)
         assertFalse(viewModel.isLoading)
-        
+
         // Find by original index since they are shuffled
         val card1 = viewModel.activeCards.find { it.originalIndex == 0 }?.card
         assertEquals("Q1", card1?.qn)
@@ -86,16 +86,17 @@ class VisualQuizTest {
         val materialId = "testMat"
         coEvery { fetchRepo.getQuizIdByMaterialId(materialId) } returns "q"
         coEvery { fetchRepo.getQuizQuestions(any()) } returns listOf(QuizQuestion("Q1", listOf("A1"), 0))
-        
+
         viewModel.loadQuizData(materialId)
         advanceUntilIdle()
 
         viewModel.onAnswered(true)
+        advanceUntilIdle() // Wait for the delay(150) and removal logic in viewModelScope
 
         assertEquals(1, viewModel.correctCount)
         assertEquals(0, viewModel.activeCards.size)
         assertTrue(viewModel.isFinished)
-        assertEquals(1, viewModel.userAnswersMap[0]) 
+        assertEquals(1, viewModel.userAnswersMap[0])
     }
 
     @Test
@@ -103,15 +104,16 @@ class VisualQuizTest {
         val materialId = "testMat"
         coEvery { fetchRepo.getQuizIdByMaterialId(materialId) } returns "q"
         coEvery { fetchRepo.getQuizQuestions(any()) } returns listOf(QuizQuestion("Q1", listOf("A1"), 0))
-        
+
         viewModel.loadQuizData(materialId)
         advanceUntilIdle()
 
         viewModel.onAnswered(false)
+        advanceUntilIdle() // Wait for the delay(150) and removal logic in viewModelScope
 
         assertEquals(0, viewModel.correctCount)
         assertEquals(0, viewModel.activeCards.size)
-        assertEquals(0, viewModel.userAnswersMap[0]) 
+        assertEquals(0, viewModel.userAnswersMap[0])
     }
 
     @Test
@@ -123,13 +125,15 @@ class VisualQuizTest {
         )
         coEvery { fetchRepo.getQuizIdByMaterialId(any()) } returns "q"
         coEvery { fetchRepo.getQuizQuestions(any()) } returns questions
-        
+
         viewModel.loadQuizData(materialId)
         advanceUntilIdle()
-        
+
         val firstCardWrapper = viewModel.activeCards[0]
-        
+
         viewModel.skipCard()
+        // skipCard only uses a coroutine if isAnswerRevealed is true.
+        // Here it is false, so it happens immediately.
         
         assertEquals(2, viewModel.activeCards.size)
         assertEquals(firstCardWrapper, viewModel.activeCards.last())
