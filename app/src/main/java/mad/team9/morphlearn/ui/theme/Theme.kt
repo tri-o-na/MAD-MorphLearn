@@ -17,7 +17,9 @@ private val DarkColorScheme = darkColorScheme(
     tertiary = MorphPink,
     onPrimary = Color.Black,
     onSecondary = Color.White,
-    onTertiary = Color.Black
+    onTertiary = Color.Black,
+    onSurface = TextLight,
+    onBackground = TextLight,
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -30,7 +32,7 @@ private val LightColorScheme = lightColorScheme(
     onSecondary = Color.White,
     onTertiary = TextDark,
     onBackground = TextDark,
-    onSurface = TextDark
+    onSurface = TextDark,
 )
 
 @Composable

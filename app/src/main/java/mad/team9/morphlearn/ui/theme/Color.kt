@@ -21,6 +21,7 @@ val MorphLightGreen = Color(0xFF9CCC65)
 
 val BackgroundGray = Color(0xFFF8F9FA)
 val TextDark = Color(0xFF2D3436)
+val TextLight = Color(0xFFCED8DA)
 val BorderOrange = Color(0xFFFFE0B2)
 val GradientOrangeStart = Color(0xFFFFF3E0)
 val GradientPinkEnd = Color(0xFFFFEBEE)

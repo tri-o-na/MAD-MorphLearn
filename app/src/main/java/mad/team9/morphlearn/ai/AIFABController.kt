@@ -166,7 +166,7 @@ fun AIUploadPDFModal(
 
     Column(modifier = Modifier.padding(16.dp).fillMaxWidth()){
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text("Upload PDF", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text("Upload PDF", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
 
             Spacer(modifier = Modifier.weight(1f))
 
@@ -230,9 +230,9 @@ fun AIConfigureModal(
         }
 
         TextButton(onClick = onBack, contentPadding = PaddingValues(0.dp)) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, modifier = Modifier.size(18.dp), tint = MorphTeal)
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.width(4.dp))
-            Text("Back", color = MorphTeal)
+            Text("Back", color = MaterialTheme.colorScheme.primary)
         }
 
         Surface(
@@ -244,7 +244,7 @@ fun AIConfigureModal(
             Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically){
                 Icon(Icons.Default.Description, contentDescription = null, tint = Color(0xFF7C4DFF))
                 Spacer(Modifier.width(8.dp))
-                Text(fileName?:"PDF", style = MaterialTheme.typography.bodyMedium, maxLines = 1)
+                Text(fileName?:"PDF", style = MaterialTheme.typography.bodyMedium, color = Color(0xFF7C4DFF), maxLines = 1)
             }
         }
 
@@ -260,11 +260,11 @@ fun AIConfigureModal(
             shape = RoundedCornerShape(12.dp),
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black,
-                focusedBorderColor = MorphTeal,
-                unfocusedBorderColor = MorphTeal,
-                cursorColor = MorphTeal
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.primary,
+                cursorColor = MaterialTheme.colorScheme.primary
             )
         )
 
@@ -280,11 +280,11 @@ fun AIConfigureModal(
             shape = RoundedCornerShape(12.dp),
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black,
-                focusedBorderColor = MorphTeal,
-                unfocusedBorderColor = MorphTeal,
-                cursorColor = MorphTeal
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.primary,
+                cursorColor = MaterialTheme.colorScheme.primary
             )
         )
 
@@ -300,7 +300,7 @@ fun AIConfigureModal(
                 disabledContentColor = Color.LightGray
             )
         ) {
-            Text("Upload and Generate", fontWeight = FontWeight.Bold)
+            Text("Upload and Generate", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSecondary)
         }
     }
 }
@@ -338,7 +338,7 @@ fun PDFSelectionArea(
                     )
                     Spacer(Modifier.width(8.dp))
 
-                    Text(fileName, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                    Text(fileName, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = Color(0xFF7C4DFF))
 
                     IconButton(onClick = onClearPDF) {
                         Icon(
