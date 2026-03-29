@@ -25,10 +25,9 @@ fun QuizLayoutSelector(
     when (normalizedStyle) {
         "KINESTHETIC" -> {
             DragDropQuizScreen(
-                questions = state.questions,
-                topic = topic,
+                materialId = state.materialId,
                 onBackClick = onDone,
-                onFinish = onFinish
+                onFinish = onDone
             )
         }
         "VISUAL" -> {
