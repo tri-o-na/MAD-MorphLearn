@@ -54,6 +54,7 @@ import java.net.URLEncoder
 import mad.team9.morphlearn.onboardingQuiz.OnboardingQuizScreen
 import mad.team9.morphlearn.login.FirebaseAuthManager
 import mad.team9.morphlearn.notes.NotesViewModel
+import mad.team9.morphlearn.ui.theme.MorphTeal
 
 @Composable
 fun MorphLearnApp(
@@ -124,8 +125,16 @@ fun MorphLearnApp(
                     if (shouldShowBottomBar) {
                         NavigationBar(
                             containerColor = Color.White,
-                            tonalElevation = 8.dp
+                            tonalElevation = 0.dp
                         ) {
+                            val navItemColors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = MorphTeal,
+                                selectedTextColor = Color.Black,
+                                unselectedIconColor = Color.Black.copy(alpha = 0.6f),
+                                unselectedTextColor = Color.Black.copy(alpha = 0.6f),
+                                indicatorColor = Color.Transparent
+                            )
+
                             // Library Tab
                             NavigationBarItem(
                                 icon = {
@@ -144,7 +153,8 @@ fun MorphLearnApp(
                                         launchSingleTop = true
                                         restoreState = true
                                     }
-                                }
+                                },
+                                colors = navItemColors
                             )
 
                             // Home Tab
@@ -160,7 +170,8 @@ fun MorphLearnApp(
                                         launchSingleTop = true
                                         restoreState = true
                                     }
-                                }
+                                },
+                                colors = navItemColors
                             )
 
                             // Profile Tab
@@ -181,7 +192,8 @@ fun MorphLearnApp(
                                         launchSingleTop = true
                                         restoreState = true
                                     }
-                                }
+                                },
+                                colors = navItemColors
                             )
                         }
                     }
