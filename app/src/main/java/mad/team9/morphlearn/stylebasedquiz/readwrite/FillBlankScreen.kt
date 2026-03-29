@@ -111,14 +111,15 @@ fun FillBlankScreen(
                     )
                 )
             },
-            containerColor = MaterialTheme.colorScheme.background
+            containerColor = MaterialTheme.colorScheme.background,
+            contentWindowInsets = WindowInsets(0, 0, 0, 0) // Prevent double-padding from nested Scaffolds
         ) { padding ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
                     .imePadding() // Ensure content is pushed up by the keyboard
-                    .padding(24.dp),
+                    .padding(start = 24.dp, end = 24.dp, top = 0.dp, bottom = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Progress Bar
@@ -135,7 +136,7 @@ fun FillBlankScreen(
                     trackColor = MaterialTheme.colorScheme.surfaceVariant
                 )
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 // Question Area
                 ElevatedCard(
@@ -153,7 +154,7 @@ fun FillBlankScreen(
                             .verticalScroll(scrollState) // Allow scrolling if the keyboard reduces available height
                             .padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
+                        verticalArrangement = Arrangement.Top // Changed from Center to Top
                     ) {
                         Surface(
                             color = MaterialTheme.colorScheme.primaryContainer,
@@ -168,7 +169,7 @@ fun FillBlankScreen(
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(32.dp))
+                        Spacer(modifier = Modifier.height(24.dp))
 
                         viewModel.currentQuestion?.let { question ->
                             Text(
@@ -179,7 +180,7 @@ fun FillBlankScreen(
                                 lineHeight = 32.sp
                             )
 
-                            Spacer(modifier = Modifier.height(40.dp))
+                            Spacer(modifier = Modifier.height(24.dp)) // Reduced from 32dp
 
                             val borderColor = feedbackControl.getBorderColor(
                                 viewModel.isAnswered,
@@ -252,7 +253,7 @@ fun FillBlankScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 // Action Button
                 Button(
