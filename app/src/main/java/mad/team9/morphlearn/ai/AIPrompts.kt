@@ -120,6 +120,9 @@ suspend fun generateNewQuiz(weakQuestions: List<String>, notes: String, learnerT
         Context:
         $userWeaknessContext
         
+        Focus on generating questions similar to questions the user had gotten wrong.
+        If there is no wrong questions, generate questions based on the material.
+        
         Return the result in the following JSON format:
         {
             "questions": [
