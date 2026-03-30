@@ -26,7 +26,7 @@ fun OnboardingQuizScreen(viewModel: QuizViewModel = viewModel(), onQuizComplete:
         LinearProgressIndicator(
             progress = { progress },
             modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
-            color = Color(0xFF006064)
+            color = MaterialTheme.colorScheme.primary
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -70,7 +70,7 @@ fun OnboardingQuizScreen(viewModel: QuizViewModel = viewModel(), onQuizComplete:
             },
             modifier = Modifier.fillMaxWidth().height(56.dp),
             enabled = viewModel.selectedOptionIndex != null,
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF006064))
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
         ) {
             Text(if (viewModel.currentQuestionIndex == viewModel.questions.size - 1) "Finish" else "Next")
         }
