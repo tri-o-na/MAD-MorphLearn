@@ -1,4 +1,4 @@
-package mad.team9.morphlearn.login  // or a better package like auth
+package mad.team9.morphlearn.login
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -8,10 +8,6 @@ import com.google.firebase.Timestamp
 import kotlinx.coroutines.tasks.await
 
 object FirebaseAuthManager {
-
-    // ───────────────────────────────────────────────
-    // Authentication part
-    // ───────────────────────────────────────────────
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val db: FirebaseFirestore get() = FirebaseFirestore.getInstance()
@@ -31,14 +27,11 @@ object FirebaseAuthManager {
     }
 
     suspend fun saveLearningStyle(style: String): Result<Unit> = try {
-        val userId = auth.currentUser?.uid?: throw Exception("User not authenticated")
-
-        // Use SetOptions.merge() to avoid overwriting existing fields (like email)
+        val userId = auth.currentUser?.uid ?: throw Exception("User not authenticated")
         db.collection("Users")
             .document(userId)
             .set(mapOf("learningStyle" to style), SetOptions.merge())
             .await()
-
         Result.success(Unit)
     } catch (e: Exception) {
         Result.failure(e)
@@ -48,10 +41,19 @@ object FirebaseAuthManager {
         val uid = auth.currentUser?.uid ?: return false
         return try {
             val document = db.collection("Users").document(uid).get().await()
-            // Check if the field exists and is not empty
             document.contains("learningStyle") && document.getString("learningStyle")?.isNotEmpty() == true
         } catch (e: Exception) {
             false
+        }
+    }
+
+    suspend fun getLearningStyle(): String {
+        val uid = auth.currentUser?.uid ?: return "Visual"
+        return try {
+            val document = db.collection("Users").document(uid).get().await()
+            document.getString("learningStyle") ?: "Visual"
+        } catch (e: Exception) {
+            "Visual"
         }
     }
 
@@ -59,31 +61,17 @@ object FirebaseAuthManager {
         auth.signOut()
     }
 
-    // ───────────────────────────────────────────────
-    // Firestore profile helpers
-    // ───────────────────────────────────────────────
-
-
-
-    /**
-     * Creates a minimal user profile document in Firestore after signup.
-     * You can easily extend this later by adding more fields.
-     */
     suspend fun createMinimalUserProfile(uid: String, email: String) {
         val userData = mapOf(
             "email" to email,
             "createdAt" to Timestamp.now()
         )
-
         db.collection("Users")
             .document(uid)
             .set(userData)
             .await()
     }
 
-    /**
-     * Optional: Update last login time (can be called after successful signIn)
-     */
     suspend fun updateLastLogin(uid: String) {
         db.collection("Users")
             .document(uid)

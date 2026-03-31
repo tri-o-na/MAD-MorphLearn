@@ -1,7 +1,13 @@
 package mad.team9.morphlearn
 
+import android.util.Log
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -14,8 +20,10 @@ import androidx.compose.material.icons.filled.LibraryBooks
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -39,13 +47,15 @@ import androidx.navigation.navArgument
 import kotlinx.coroutines.launch
 import com.google.firebase.firestore.FirebaseFirestore
 import mad.team9.morphlearn.ai.AIFloatingActionButton
-import mad.team9.morphlearn.ai.AIGeneratedNotes
+import mad.team9.morphlearn.ai.AILoadingScreen
 import mad.team9.morphlearn.ai.AINotesRepository
 import mad.team9.morphlearn.ai.AINotesViewModel
-import mad.team9.morphlearn.ai.AIUploadPDF
+import mad.team9.morphlearn.ai.AIQuizService
 import java.net.URLEncoder
 import mad.team9.morphlearn.onboardingQuiz.OnboardingQuizScreen
 import mad.team9.morphlearn.login.FirebaseAuthManager
+import mad.team9.morphlearn.notes.NotesViewModel
+import mad.team9.morphlearn.ui.theme.MorphTeal
 
 @Composable
 fun MorphLearnApp(
@@ -58,20 +68,23 @@ fun MorphLearnApp(
 
     val firestore = FirebaseFirestore.getInstance()
     val repository = remember { AINotesRepository(firestore) }
+    val quizService = remember { AIQuizService(repository) }
 
-    // Create Ai viewmodel to use for AI Upload PDF page and AI Generated Notes page
     val aiNotesViewModel: AINotesViewModel = viewModel(
-        factory = object : ViewModelProvider.Factory{
-            override fun<T: ViewModel> create(modelClass: Class<T>): T{
-                return AINotesViewModel(repository) as T
+        factory = object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                if (modelClass.isAssignableFrom(AINotesViewModel::class.java)) {
+                    return AINotesViewModel(quizService) as T
+                }
+                throw IllegalArgumentException("Unknown ViewModel class")
             }
         }
     )
 
     // Define which screens should show navigation elements
-    val bottomBarRoutes = listOf("home", "profile", "library")
+    val bottomBarRoutes = listOf("home", "profile", "notes")
     val shouldShowBottomBar = route in bottomBarRoutes
-    val showAIFAB = route == "home"
+    val showAIFAB = route == "home" || route == "notes" || route == "profile"
 
     // Track the current user and their quiz status
     val currentUser = remember { FirebaseAuth.getInstance().currentUser }
@@ -102,184 +115,225 @@ fun MorphLearnApp(
             CircularProgressIndicator()
         }
     } else {
-        Scaffold(
-            floatingActionButton = {
-                if (showAIFAB) {
-                    AIFloatingActionButton(navController)
-                }
-            },
-            bottomBar = {
-                if (shouldShowBottomBar) {
-                    NavigationBar(
-                        containerColor = Color.White,
-                        tonalElevation = 8.dp
-                    ) {
-                        // Library Tab
-                        NavigationBarItem(
-                            icon = { Icon(Icons.Default.LibraryBooks, contentDescription = "Library") },
-                            label = { Text("Library") },
-                            selected = currentDestination?.hierarchy?.any { it.route == "notes" } == true,
-                            onClick = {
-                                navController.navigate("notes") {
-                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            }
-                        )
+        Box(modifier = Modifier.fillMaxSize()) {
+            Scaffold(
+                floatingActionButton = {
+                    if (showAIFAB) {
+                        AIFloatingActionButton(navController, aiNotesViewModel)
+                    }
+                },
+                bottomBar = {
+                    if (shouldShowBottomBar) {
+                        NavigationBar(
+                            containerColor = Color.White,
+                            tonalElevation = 0.dp
+                        ) {
+                            val navItemColors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = MorphTeal,
+                                selectedTextColor = Color.Black,
+                                unselectedIconColor = Color.Black.copy(alpha = 0.6f),
+                                unselectedTextColor = Color.Black.copy(alpha = 0.6f),
+                                indicatorColor = Color.Transparent
+                            )
 
-                        // Home Tab
-                        NavigationBarItem(
-                            icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-                            label = { Text("Home") },
-                            selected = currentDestination?.hierarchy?.any { it.route == "home" } == true,
-                            onClick = {
-                                navController.navigate("home") {
-                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            }
-                        )
+                            // Library Tab
+                            NavigationBarItem(
+                                icon = {
+                                    Icon(
+                                        Icons.Default.LibraryBooks,
+                                        contentDescription = "Library"
+                                    )
+                                },
+                                label = { Text("Library") },
+                                selected = currentDestination?.hierarchy?.any { it.route == "notes" } == true,
+                                onClick = {
+                                    navController.navigate("notes") {
+                                        popUpTo(navController.graph.findStartDestination().id) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                },
+                                colors = navItemColors
+                            )
 
-                        // Profile Tab
-                        NavigationBarItem(
-                            icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
-                            label = { Text("Profile") },
-                            selected = currentDestination?.hierarchy?.any { it.route == "profile" } == true,
-                            onClick = {
-                                navController.navigate("profile") {
-                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            }
-                        )
+                            // Home Tab
+                            NavigationBarItem(
+                                icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
+                                label = { Text("Home") },
+                                selected = currentDestination?.hierarchy?.any { it.route == "home" } == true,
+                                onClick = {
+                                    navController.navigate("home") {
+                                        popUpTo(navController.graph.findStartDestination().id) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                },
+                                colors = navItemColors
+                            )
+
+                            // Profile Tab
+                            NavigationBarItem(
+                                icon = {
+                                    Icon(
+                                        Icons.Default.Person,
+                                        contentDescription = "Profile"
+                                    )
+                                },
+                                label = { Text("Profile") },
+                                selected = currentDestination?.hierarchy?.any { it.route == "profile" } == true,
+                                onClick = {
+                                    navController.navigate("profile") {
+                                        popUpTo(navController.graph.findStartDestination().id) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                },
+                                colors = navItemColors
+                            )
+                        }
                     }
                 }
-            }
-        ) { innerPadding ->
-            NavHost(
-                navController = navController,
-                startDestination = startDestination,
-                modifier = modifier.padding(innerPadding)
-            ) {
-                composable("login") {
-                    val scope = rememberCoroutineScope()
-                    LoginScreen(
-                        onLoginSuccess = {
-                            scope.launch {
-                                val complete = FirebaseAuthManager.isLearningStyleSet()
-                                if (complete) {
-                                    navController.navigate("home") { popUpTo("login") { inclusive = true } }
-                                } else {
-                                    navController.navigate("onboarding_quiz") { popUpTo("login") { inclusive = true } }
-                                }
-                            }
-                        },
-                        onNavigateToRegister = { navController.navigate("register") }
-                    )
-                }
-
-                composable("register") {
-                    RegisterScreen(
-                        onRegisterSuccess = {
-                            navController.navigate("onboarding_quiz") {
-                                popUpTo("register") { inclusive = true }
-                            }
-                        },
-                        onBackToLogin = { navController.popBackStack() }
-                    )
-                }
-
-                composable("onboarding_quiz") {
-                    OnboardingQuizScreen(
-                        onQuizComplete = {
-                            navController.navigate("home") {
-                                popUpTo("onboarding_quiz") { inclusive = true }
-                            }
-                        }
-                    )
-                }
-
-                composable("home") {
-                    val user = FirebaseAuth.getInstance().currentUser
-                    val displayName = user?.email?.substringBefore("@") ?: "Learner"
-
-                    HomeScreen(
-                        username = displayName,
-                        navController = navController,
-                        onBottomNavItemSelected = { selectedRoute ->
-                            navController.navigate(selectedRoute.lowercase()) {
-                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        }
-                    )
-                }
-            composable("notes") {
-                NotesScreen(
+            ) { innerPadding ->
+                NavHost(
                     navController = navController,
-                    onOpenTopic = { materialId ->
-                        navController.navigate("noteDetails/$materialId")
+                    startDestination = startDestination,
+                    modifier = modifier.padding(innerPadding)
+                ) {
+                    composable("login") {
+                        val scope = rememberCoroutineScope()
+                        LoginScreen(
+                            onLoginSuccess = {
+                                scope.launch {
+                                    val complete = FirebaseAuthManager.isLearningStyleSet()
+                                    if (complete) {
+                                        navController.navigate("home") {
+                                            popUpTo("login") {
+                                                inclusive = true
+                                            }
+                                        }
+                                    } else {
+                                        navController.navigate("onboarding_quiz") {
+                                            popUpTo("login") {
+                                                inclusive = true
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            onNavigateToRegister = { navController.navigate("register") }
+                        )
                     }
-                )
-            }
-            composable(
-                route = "noteDetails/{materialId}",
-                arguments = listOf(navArgument("materialId") { type = NavType.StringType })
-            ) {
-                val materialId = it.arguments?.getString("materialId") ?: ""
 
-                NoteDetailsScreen(
-                    materialId = materialId,
-                    onBack = { navController.popBackStack() },
-                    onTakeQuiz = { quizId, topicTitle ->
-                        val encQuizId = URLEncoder.encode(quizId, "UTF-8")
-                        val encTopic = URLEncoder.encode(topicTitle, "UTF-8")
-                        navController.navigate("quizPlay/$encQuizId/$encTopic")
+                    composable("register") {
+                        RegisterScreen(
+                            onRegisterSuccess = {
+                                navController.navigate("onboarding_quiz") {
+                                    popUpTo("register") { inclusive = true }
+                                }
+                            },
+                            onBackToLogin = { navController.popBackStack() }
+                        )
                     }
-                )
-            }
-            composable(
-                route = "quizPlay/{quizId}/{topic}",
-                arguments = listOf(
-                    navArgument("quizId") { type = NavType.StringType },
-                    navArgument("topic") { type = NavType.StringType }
-                )
-            ) {
-                val quizId = it.arguments?.getString("quizId") ?: ""
-                val topic = it.arguments?.getString("topic") ?: ""
-                QuizPlayScreen(
-                    quizId = quizId,
-                    topic = topic,
-                    onDone = {
-                        navController.navigate("notes") {
-                            popUpTo("notes") { inclusive = true }
-                            launchSingleTop = true
-                        }
+
+                    composable("onboarding_quiz") {
+                        OnboardingQuizScreen(
+                            onQuizComplete = {
+                                navController.navigate("home") {
+                                    popUpTo("onboarding_quiz") { inclusive = true }
+                                }
+                            }
+                        )
                     }
-                )
-            }
 
-                composable("upload-PDF") {
-                    AIUploadPDF(navController, aiNotesViewModel)
-                }
+                    composable("home") {
+                        val user = FirebaseAuth.getInstance().currentUser
+                        val displayName = user?.email?.substringBefore("@") ?: "Learner"
 
-                composable("profile") {
-                    ProfileScreen()
-                }
-
-                composable(
-                    route = "ai-response-PDF",
+                        HomeScreen(
+                            username = displayName,
+                            navController = navController,
+                            onBottomNavItemSelected = { selectedRoute ->
+                                navController.navigate(selectedRoute.lowercase()) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
+                        )
+                    }
+                    composable("notes") {
+                        NotesScreen(
+                            navController = navController,
+                            onOpenTopic = { materialId ->
+                                navController.navigate("noteDetails/$materialId")
+                            }
+                        )
+                    }
+                    composable(
+                        route = "noteDetails/{materialId}",
+                        arguments = listOf(navArgument("materialId") { type = NavType.StringType })
                     ) {
-                    AIGeneratedNotes(navController, aiNotesViewModel)
-                }
+                        val materialId = it.arguments?.getString("materialId") ?: ""
+                        val notesViewModel: NotesViewModel = viewModel()
 
-                composable("library") {
-                    Text("Library Screen coming soon", modifier = Modifier.padding(16.dp))
+                        NoteDetailsScreen(
+                            materialId = materialId,
+                            onBack = { navController.popBackStack() },
+                            onTakeQuiz = { quizId, topicTitle ->
+                                Log.d("TAKE_QUIZ", "Taking quiz with ID: $quizId")
+                                val encQuizId = URLEncoder.encode(quizId, "UTF-8")
+                                val encTopic = URLEncoder.encode(topicTitle, "UTF-8")
+                                navController.navigate("quizPlay/$encQuizId/$encTopic")
+                            },
+                            onRegenerateQuiz = { materialId ->
+                                aiNotesViewModel.regenerateQuiz(materialId) {
+                                    notesViewModel.initializeNoteData(materialId)
+                                }
+                            },
+                        )
+                    }
+                    composable(
+                        route = "quizPlay/{quizId}/{topic}",
+                        arguments = listOf(
+                            navArgument("quizId") { type = NavType.StringType },
+                            navArgument("topic") { type = NavType.StringType }
+                        )
+                    ) {
+                        val quizId = it.arguments?.getString("quizId") ?: ""
+                        val topic = it.arguments?.getString("topic") ?: ""
+                        QuizPlayScreen(
+                            quizId = quizId,
+                            topic = topic,
+                            onDone = {
+                                navController.navigate("notes") {
+                                    popUpTo("notes") { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                            },
+                            onBackToNotes = {
+                                navController.navigate("notes")
+                            }
+                        )
+                    }
+                    composable("profile") {
+                        ProfileScreen()
+                    }
+                    composable("library") {
+                        Text("Library Screen coming soon", modifier = Modifier.padding(16.dp))
+                    }
                 }
+            }
+
+            if (aiNotesViewModel.isLoading) {
+                AILoadingScreen()
             }
         }
     }

@@ -27,15 +27,9 @@ class QuizViewModel : ViewModel() {
             currentQuestionIndex++
             selectedOptionIndex = null
         } else {
-            // Scoring Logic Result
-            val readWriteCount = selectedStyles.count { it == LearningStyle.READ_WRITE }
-            val kinestheticCount = selectedStyles.count { it == LearningStyle.KINESTHETIC }
-
-            val finalStyle = if (readWriteCount >= kinestheticCount) {
-                LearningStyle.READ_WRITE
-            } else {
-                LearningStyle.KINESTHETIC
-            }
+            // Scoring Logic: Find the most frequent learning style
+            val styleCounts = selectedStyles.groupingBy { it }.eachCount()
+            val finalStyle = styleCounts.maxByOrNull { it.value }?.key ?: LearningStyle.READ_WRITE
 
             onComplete(finalStyle)
         }

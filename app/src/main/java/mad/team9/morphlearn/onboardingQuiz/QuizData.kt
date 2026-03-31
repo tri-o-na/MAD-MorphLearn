@@ -1,5 +1,10 @@
 package mad.team9.morphlearn.onboardingQuiz
-enum class LearningStyle { READ_WRITE, KINESTHETIC }
+enum class LearningStyle(val displayName: String) {
+    VISUAL("VISUAL"),
+    AUDITORY("AUDITORY"),
+    READ_WRITE("READ/WRITE"),
+    KINESTHETIC("KINESTHETIC")
+}
 
 data class Option(
     val text: String,
@@ -16,29 +21,39 @@ data class Question(
 fun getOnboardingQuestions(): List<Question> {
     return listOf(
         Question(1, "You are learning how to use a new piece of complex software. What is your first instinct?", listOf(
-            Option("Open the \"Help\" documentation or user manual and read the instructions.", LearningStyle.READ_WRITE),
-            Option("Start clicking buttons and exploring the interface to see what happens.", LearningStyle.KINESTHETIC),
-            Option("Search for a written step-by-step tutorial or a \"Quick Start\" blog post.", LearningStyle.READ_WRITE),
-            Option("Look for a physical demo or try to perform a task immediately while learning.", LearningStyle.KINESTHETIC),
-        ).shuffled()), // Shuffles options within the question
-        Question(2, "You need to assemble a new piece of furniture. How do you approach the task?", listOf(
-            Option("Read every word of the instruction booklet before touching the parts.", LearningStyle.READ_WRITE),
-            Option("Lay all the pieces out and start putting them together based on how they look.", LearningStyle.KINESTHETIC),
-            Option("Keep the written guide nearby to refer to the text descriptions of each step.", LearningStyle.READ_WRITE),
-            Option("Ignore the manual unless you get stuck; you prefer to feel how the pieces fit.", LearningStyle.KINESTHETIC),
-        ).shuffled()), // Shuffles options within the question
+            Option("Look for a diagram or a flowchart showing how the software's features connect.", LearningStyle.VISUAL),
+            Option("Find a podcast or a video where someone explains the features out loud.", LearningStyle.AUDITORY),
+            Option("Open the \"Help\" documentation or user manual and read the text instructions.", LearningStyle.READ_WRITE),
+            Option("Start clicking buttons and exploring the interface to see what happens.", LearningStyle.KINESTHETIC)
+        ).shuffled()),  // Shuffles options within the question
+
+        Question(2, "You need to find your way to a new coffee shop in a part of town you don't know. You would:", listOf(
+            Option("Open a map app and look at the layout of the streets and landmarks.", LearningStyle.VISUAL),
+            Option("Ask a friend for spoken directions or use voice-guided GPS.", LearningStyle.AUDITORY),
+            Option("Read a list of written turn-by-turn directions.", LearningStyle.READ_WRITE),
+            Option("Just start driving in the general direction and find it by 'feel'.", LearningStyle.KINESTHETIC)
+        ).shuffled()),
+
         Question(3, "When you are trying to memorize a new concept for a presentation, you usually:", listOf(
+            Option("Draw a mind map or use different colored highlighters to organize ideas.", LearningStyle.VISUAL),
+            Option("Talk through the points out loud or record yourself and listen back.", LearningStyle.AUDITORY),
             Option("Write out your notes over and over again until they stick.", LearningStyle.READ_WRITE),
-            Option("Walk around the room or use hand gestures while reciting the points.", LearningStyle.KINESTHETIC),
-            Option("Read your slides or a transcript of your speech multiple times.", LearningStyle.READ_WRITE),
-            Option("Practice the actual physical delivery: standing up and moving as if you were on stage.", LearningStyle.KINESTHETIC),
-        ).shuffled()), // Shuffles options within the question
-        Question(4, "If you were attending a workshop on a new hobby (like cooking or coding), which part would you enjoy most?", listOf(
-            Option("The detailed handouts and written recipes/code snippets provided.", LearningStyle.READ_WRITE),
-            Option("The lab portion where you get to handle the tools and try it yourself.", LearningStyle.KINESTHETIC),
-            Option("Taking your own exhaustive notes during the lecture.", LearningStyle.READ_WRITE),
-            Option("A hands-on exercise where you move through the process physically.", LearningStyle.KINESTHETIC),
-        ).shuffled()), // Shuffles options within the question
-        // ... add other questions
+            Option("Walk around the room or use hand gestures while reciting the points.", LearningStyle.KINESTHETIC)
+        ).shuffled()),
+
+        Question(4, "If you were attending a workshop on a new hobby (like cooking), which part would you enjoy most?", listOf(
+            Option("Watching a live demonstration or looking at photos of the finished dish.", LearningStyle.VISUAL),
+            Option("Listening to the chef explain the history and science of the ingredients.", LearningStyle.AUDITORY),
+            Option("The detailed handouts and written recipes provided.", LearningStyle.READ_WRITE),
+            Option("The hands-on portion where you actually chop, stir, and cook.", LearningStyle.KINESTHETIC)
+        ).shuffled()),
+
+        Question(5, "You are choosing a new phone and want to learn about its features. You prefer to:", listOf(
+            Option("Look at a comparison infographic or a gallery of the UI design.", LearningStyle.VISUAL),
+            Option("Listen to a tech reviewer talk about their experience with it.", LearningStyle.AUDITORY),
+            Option("Read a detailed article or the technical specifications list.", LearningStyle.READ_WRITE),
+            Option("Go to a store and hold the phone to see how it feels in your hand.", LearningStyle.KINESTHETIC)
+        ).shuffled())
+        // Add more qns here
     )
 }

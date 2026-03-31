@@ -1,16 +1,23 @@
 package mad.team9.morphlearn.login
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import mad.team9.morphlearn.login.FirebaseAuthManager
-
+import mad.team9.morphlearn.R
 
 @Composable
 fun RegisterScreen(
@@ -19,95 +26,182 @@ fun RegisterScreen(
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var hasConsented by remember { mutableStateOf(false) }
+    var showTermsDialog by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     val scope = rememberCoroutineScope()
 
-    Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text("Register", style = MaterialTheme.typography.displayLarge)
-
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it.trim() },
-            label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth().padding(8.dp)
-        )
-
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Password (min 8 chars)") },
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth().padding(8.dp)
-        )
-
-        errorMessage?.let {
-            Text(
-                text = it,
-                color = Color.Red,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-        }
-
-        if (isLoading) {
-            CircularProgressIndicator(modifier = Modifier.padding(16.dp))
-        }
-
-        Button(
-            onClick = {
-                if (email.isBlank() || password.length < 8) {
-                    errorMessage = "Email required & password ≥ 8 characters"
-                    return@Button
-                }
-
-                isLoading = true
-                errorMessage = null
-
-                scope.launch {
-                    val result = FirebaseAuthManager.signUp(email, password)
-                    isLoading = false
-
-                    result.onSuccess { user ->
-                        // Save minimal profile to Firestore
-                        try {
-                            FirebaseAuthManager.createMinimalUserProfile(
-                                uid = user.uid,
-                                email = user.email ?: ""
-                            )
-                            onRegisterSuccess()
-                        } catch (e: Exception) {
-                            // Don't block navigation if Firestore fails
-                            println("Failed to save profile: ${e.message}")
-                            onRegisterSuccess()
-                        }
-                    }
-
-                    result.onFailure { e ->
-                        errorMessage = when {
-                            e.message?.contains("EMAIL_EXISTS", ignoreCase = true) == true ->
-                                "Email already in use"
-                            e.message?.contains("INVALID_EMAIL", ignoreCase = true) == true ->
-                                "Invalid email format"
-                            e.message?.contains("WEAK_PASSWORD", ignoreCase = true) == true ->
-                                "Password too weak"
-                            else -> e.localizedMessage ?: "Registration failed"
-                        }
-                    }
-                }
+    if (showTermsDialog) {
+        AlertDialog(
+            onDismissRequest = { showTermsDialog = false },
+            title = { Text("AI Usage Consent", color = MaterialTheme.colorScheme.onSurface) },
+            text = { Text("MorphLearn uses AI to personalize your study materials based on your learning diagnostics. Your data is strictly used for educational optimization.", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+            confirmButton = {
+                TextButton(onClick = { showTermsDialog = false }) { Text("Close", color = MaterialTheme.colorScheme.primary) }
             },
-            enabled = !isLoading && email.isNotBlank() && password.length >= 6,
-            modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
-        ) {
-            Text("Register")
-        }
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    }
 
-        TextButton(onClick = onBackToLogin) {
-            Text("Back to Login")
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .imePadding(),
+        contentAlignment = Alignment.Center
+    ) {
+        ElevatedCard(
+            modifier = Modifier
+                .fillMaxWidth(0.85f)
+                .padding(vertical = 32.dp),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.elevatedCardColors(
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface
+            ),
+            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(24.dp)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Header Logo
+                Image(
+                    painter = painterResource(id = R.drawable.morphlearn_logo),
+                    contentDescription = "MorphLearn Logo",
+                    modifier = Modifier.size(120.dp),
+                    contentScale = ContentScale.Fit
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "MorphLearn",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "Personalized Learning",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Email Field
+                Text(
+                    text = "Email",
+                    modifier = Modifier.fillMaxWidth(),
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    placeholder = { Text("your@email.com") },
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Password Field
+                Text(
+                    text = "Password",
+                    modifier = Modifier.fillMaxWidth(),
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    placeholder = { Text("••••••••") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    )
+                )
+
+                // Consent Section
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                ) {
+                    Checkbox(
+                        checked = hasConsented,
+                        onCheckedChange = { hasConsented = it },
+                        colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary)
+                    )
+                    TextButton(onClick = { showTermsDialog = true }, contentPadding = PaddingValues(0.dp)) {
+                        Text(
+                            text = "I consent to AI data collection",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+
+                if (errorMessage != null) {
+                    Text(
+                        text = errorMessage!!,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Button(
+                    onClick = {
+                        isLoading = true
+                        scope.launch {
+                            val result = FirebaseAuthManager.signUp(email.trim(), password)
+                            isLoading = false
+                            result.onSuccess { user ->
+                                FirebaseAuthManager.createMinimalUserProfile(user.uid, user.email ?: "")
+                                onRegisterSuccess()
+                            }.onFailure { errorMessage = it.localizedMessage }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    enabled = !isLoading && hasConsented,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Sign Up")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                TextButton(onClick = onBackToLogin) {
+                    Text(
+                        text = "Already have an account? Log in",
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+            }
         }
     }
 }
