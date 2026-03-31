@@ -34,6 +34,3 @@ To run the app, you will need to:
 * Flashcard mode for visual learners
 * Progress dashboard with subject mastery radar chart and topic trend line chart
 * Daily streak tracking per subject
-
-
-## Team
