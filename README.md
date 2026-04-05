@@ -18,7 +18,21 @@ Before running the project, make sure you have the following installed:
 ## Firebase Setup
 This project uses Firebase for authentication and data storage. The google-services.json configuration file is not included in this repository for security reasons.
 To run the app, you will need to:
-* Contact the team to obtain access to the firebase by sending your gmail to 2402695@sit.singaporetech.edu.sg with the subject line "MorphLearn Firebase Request Access"
+* Contact the team to obtain access to the firebase by sending your gmail to 2402695@sit.singaporetech.edu.sg with the subject line "MorphLearn Firebase Request Access"z
+
+## Continuous Integration
+MorphLearn uses a GitHub Actions workflow (`.github/workflows/android.yml`) to automate testing on every push to the `main` and `dev` branches, as well as on every pull request to `main`. The workflow runs on `ubuntu-latest` and performs the following steps:
+
+1. Checks out the repository
+2. Sets up JDK 17 (Temurin distribution) with Gradle caching enabled to speed up builds
+3. Grants execute permission to the Gradle wrapper
+4. Runs all unit tests using `./gradlew testDebugUnitTest`, with the `GEMINI_API_KEY` 
+   injected securely from GitHub Secrets so AI-dependent code can be tested without 
+   exposing credentials
+5. If any tests fail, uploads the test reports as a GitHub Actions artifact so the team 
+   can inspect exactly which tests failed directly from the GitHub UI
+
+This ensures that any new changes do not break existing functionality before being merged into the main branch.
 
 ## Getting Started
 * Clone or import the project into Android Studio via File → New → Import Project from Version Control
